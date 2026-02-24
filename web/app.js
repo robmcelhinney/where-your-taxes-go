@@ -76,6 +76,36 @@ const REGION_POPULATION_ITL1 = {
     "Northern Ireland": 1916000,
 }
 
+const THEME_KEY = "taxes_theme"
+
+function applyTheme(theme) {
+    const root = document.documentElement
+    if (theme === "dark") {
+        root.setAttribute("data-theme", "dark")
+    } else {
+        root.removeAttribute("data-theme")
+    }
+    const toggle = document.getElementById("theme-toggle")
+    if (toggle) {
+        toggle.setAttribute("data-theme", theme)
+        toggle.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} mode`)
+        toggle.setAttribute(
+            "title",
+            `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
+        )
+    }
+}
+
+function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY)
+    if (saved === "dark" || saved === "light") {
+        applyTheme(saved)
+        return
+    }
+    const preferredDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    applyTheme(preferredDark ? "dark" : "light")
+}
+
 function money(v) {
     return new Intl.NumberFormat("en-GB", {
         style: "currency",
@@ -762,6 +792,15 @@ function renderSankey(flows, balances) {
     )
 
     const maxFlow = Math.max(...allFlows.map((f) => f.value_m_gbp), 1)
+    const css = getComputedStyle(document.documentElement)
+    const sankeyBg = css.getPropertyValue("--surface").trim() || "#ffffff"
+    const sankeyText = css.getPropertyValue("--text").trim() || "#1f2937"
+    const leftLabelX = 16
+    const leftFlowX = 88
+    const rightFlowX = 740
+    const rightLabelX = 890
+    const c1 = 270
+    const c2 = 555
     svg.innerHTML = ""
     const ns = "http://www.w3.org/2000/svg"
     const bg = document.createElementNS(ns, "rect")
@@ -769,18 +808,18 @@ function renderSankey(flows, balances) {
     bg.setAttribute("y", "0")
     bg.setAttribute("width", "900")
     bg.setAttribute("height", "420")
-    bg.setAttribute("fill", "#fff")
+    bg.setAttribute("fill", sankeyBg)
     svg.appendChild(bg)
 
     const nodeTextEls = new Map()
     donors.forEach((d) => {
         const y = donorY.get(d.geography_name) || 0
         const text = document.createElementNS(ns, "text")
-        text.setAttribute("x", "10")
+        text.setAttribute("x", `${leftLabelX}`)
         text.setAttribute("y", `${y + 4}`)
         text.setAttribute("font-size", "12")
         text.setAttribute("font-weight", "700")
-        text.setAttribute("fill", "#1f2937")
+        text.setAttribute("fill", sankeyText)
         text.textContent = d.geography_name
         svg.appendChild(text)
         nodeTextEls.set(d.geography_name, text)
@@ -788,11 +827,12 @@ function renderSankey(flows, balances) {
     recips.forEach((r) => {
         const y = recipY.get(r.geography_name) || 0
         const text = document.createElementNS(ns, "text")
-        text.setAttribute("x", "760")
+        text.setAttribute("x", `${rightLabelX}`)
         text.setAttribute("y", `${y + 4}`)
         text.setAttribute("font-size", "12")
         text.setAttribute("font-weight", "700")
-        text.setAttribute("fill", "#1f2937")
+        text.setAttribute("text-anchor", "end")
+        text.setAttribute("fill", sankeyText)
         text.textContent = r.geography_name
         svg.appendChild(text)
         nodeTextEls.set(r.geography_name, text)
@@ -806,7 +846,10 @@ function renderSankey(flows, balances) {
         const width = Math.max(1.25, 0.6 + (f.value_m_gbp / maxFlow) * 14)
         const c = palette[i % palette.length]
         const path = document.createElementNS(ns, "path")
-        path.setAttribute("d", `M150,${y1} C320,${y1} 560,${y2} 750,${y2}`)
+        path.setAttribute(
+            "d",
+            `M${leftFlowX},${y1} C${c1},${y1} ${c2},${y2} ${rightFlowX},${y2}`,
+        )
         path.setAttribute("fill", "none")
         path.setAttribute("stroke", c)
         path.setAttribute("stroke-width", `${width}`)
@@ -1217,6 +1260,19 @@ document.getElementById("clear-scenarios").addEventListener("click", () => {
     renderScenarioTable()
 })
 
+document.getElementById("theme-toggle").addEventListener("click", () => {
+    const current =
+        document.documentElement.getAttribute("data-theme") === "dark"
+            ? "dark"
+            : "light"
+    const next = current === "dark" ? "light" : "dark"
+    localStorage.setItem(THEME_KEY, next)
+    applyTheme(next)
+    if (state.latestFlows?.flows && state.latestFlows?.balances) {
+        renderSankey(state.latestFlows.flows, state.latestFlows.balances)
+    }
+})
+
 const includeVatEl = document.getElementById("include-vat")
 const vatRatioEl = document.getElementById("vat-ratio")
 includeVatEl.addEventListener("change", () => {
@@ -1224,6 +1280,7 @@ includeVatEl.addEventListener("change", () => {
     vatRatioEl.disabled = !enabled
     vatRatioEl.style.opacity = enabled ? "1" : "0.55"
 })
+initTheme()
 applyQueryParamsToForm()
 includeVatEl.dispatchEvent(new Event("change"))
 document.getElementById("services-view").dispatchEvent(new Event("change"))
