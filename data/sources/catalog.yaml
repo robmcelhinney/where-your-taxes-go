@@ -1,0 +1,55 @@
+version: 1
+updated_at: "2026-02-24"
+sources:
+  - id: pesa_2025_ch4_tables
+    family: hm_treasury
+    kind: national_spending
+    year: 2025
+    format: xlsx
+    url: https://assets.publishing.service.gov.uk/media/6874fe33b1b4ebc2c2e46574/PESA_2025_CP_Chapter_4_tables.xlsx
+    target_file: data/raw/pesa_2025_ch4_tables.xlsx
+  - id: pesa_2025_ch5_tables
+    family: hm_treasury
+    kind: national_spending
+    year: 2025
+    format: xlsx
+    url: https://assets.publishing.service.gov.uk/media/6874fe4582370235232f9343/PESA_2025_CP_Chapter_5_tables.xlsx
+    target_file: data/raw/pesa_2025_ch5_tables.xlsx
+  - id: public_spending_departmental_budgets_july_2025
+    family: hm_treasury
+    kind: national_spending
+    year: 2025
+    format: xlsx
+    url: https://assets.publishing.service.gov.uk/media/68763b0ea8d0255f9fe28eb5/PSS_July_2025_Chapter_1.xlsx
+    target_file: data/raw/public_spending_departmental_budgets_july_2025.xlsx
+  - id: public_spending_trends_july_2025
+    family: hm_treasury
+    kind: national_spending
+    year: 2025
+    format: xlsx
+    url: https://assets.publishing.service.gov.uk/media/68763b3ea8d0255f9fe28eb6/PSS_July_2025_Chapter_4.xlsx
+    target_file: data/raw/public_spending_trends_july_2025.xlsx
+  - id: ons_psf_revenue_current
+    family: ons
+    kind: regional_revenue
+    status: resolved
+    year: 2023
+    format: xlsx
+    url: https://www.ons.gov.uk/file?uri=%2Feconomy%2Fgovernmentpublicsectorandtaxes%2Fpublicsectorfinance%2Fdatasets%2Fcountryandregionalpublicsectorfinancesrevenuetables%2Ffinancialyearending2023%2Fcrpsffye2023totalpublicsectorcurrentreceipts.xlsx
+    target_file: data/raw/ons_regional_revenue_fye2023.xlsx
+  - id: ons_psf_expenditure_current
+    family: ons
+    kind: regional_expenditure
+    status: resolved
+    year: 2023
+    format: xlsx
+    url: https://www.ons.gov.uk/file?uri=%2Feconomy%2Fgovernmentpublicsectorandtaxes%2Fpublicsectorfinance%2Fdatasets%2Fcountryandregionalpublicsectorfinancesexpendituretables%2Ffinancialyearending2023%2Fcrpsffye2023expendituretables.xlsx
+    target_file: data/raw/ons_regional_expenditure_fye2023.xlsx
+  - id: ons_lad_to_region_2024
+    family: ons
+    kind: geography_lookup
+    status: resolved
+    year: 2024
+    format: csv
+    url: https://hub.arcgis.com/api/v3/datasets/3959874c514b470e9dd160acdc00c97a_0/downloads/data?format=csv&spatialRefId=4326&where=1%3D1
+    target_file: data/raw/ons_lad_to_region_2024.csv

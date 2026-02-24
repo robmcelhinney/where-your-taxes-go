@@ -1,0 +1,15 @@
+year,geography_code,geography_name,metric,amount_m_gbp,source_table
+2022 to 2023,K02000001,United Kingdom,total_managed_expenditure,1157297.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000001,North East,total_managed_expenditure,46637.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000002,North West,total_managed_expenditure,130105.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000003,Yorkshire and The Humber,total_managed_expenditure,90074.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000004,East Midlands,total_managed_expenditure,76468.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000005,West Midlands,total_managed_expenditure,100163.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000006,East of England,total_managed_expenditure,99291.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000007,London,total_managed_expenditure,172772.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000008,South East,total_managed_expenditure,148972.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E12000009,South West,total_managed_expenditure,93689.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,E92000001,England,total_managed_expenditure,958171.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,W92000004,Wales,total_managed_expenditure,57704.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,S92000003,Scotland,total_managed_expenditure,105430.0,ONS_CRPSF_Expenditure_FYE2023
+2022 to 2023,N92000002,Northern Ireland,total_managed_expenditure,35993.0,ONS_CRPSF_Expenditure_FYE2023

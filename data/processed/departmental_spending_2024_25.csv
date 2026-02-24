@@ -1,0 +1,34 @@
+year,source_table,department_label,row_type,amount_m_gbp
+2024-25,PSS_July_2025_Table_1_12,Health and Social Care,line_item,223199.0
+2024-25,PSS_July_2025_Table_1_12,Education,line_item,132915.0
+2024-25,PSS_July_2025_Table_1_12,Home Office,line_item,22508.0
+2024-25,PSS_July_2025_Table_1_12,Justice,line_item,13576.0
+2024-25,PSS_July_2025_Table_1_12,Law Officers' Departments,line_item,946.0
+2024-25,PSS_July_2025_Table_1_12,Defence,line_item,71534.0
+2024-25,PSS_July_2025_Table_1_12,Single Intelligence Account,line_item,4468.0
+2024-25,PSS_July_2025_Table_1_12,"Foreign, Commonwealth and Development Office",line_item,12099.0
+2024-25,PSS_July_2025_Table_1_12,MHCLG - Local Government,line_item,34435.0
+2024-25,PSS_July_2025_Table_1_12,MHCLG - Housing and Communities,line_item,12907.0
+2024-25,PSS_July_2025_Table_1_12,"Culture, Media and Sport",line_item,9049.0
+2024-25,PSS_July_2025_Table_1_12,"Science, Innovation and Technology",line_item,13899.0
+2024-25,PSS_July_2025_Table_1_12,Transport,line_item,30458.0
+2024-25,PSS_July_2025_Table_1_12,Energy Security and Net Zero (1),line_item,15017.0
+2024-25,PSS_July_2025_Table_1_12,"Environment, Food and Rural Affairs",line_item,6012.0
+2024-25,PSS_July_2025_Table_1_12,Business and Trade,line_item,1862.0
+2024-25,PSS_July_2025_Table_1_12,Work and Pensions,line_item,297468.0
+2024-25,PSS_July_2025_Table_1_12,HM Revenue and Customs,line_item,34112.0
+2024-25,PSS_July_2025_Table_1_12,HM Treasury (2),line_item,65140.0
+2024-25,PSS_July_2025_Table_1_12,Cabinet Office,line_item,26813.0
+2024-25,PSS_July_2025_Table_1_12,Scottish Government (3),line_item,70986.0
+2024-25,PSS_July_2025_Table_1_12,Welsh Government (4),line_item,25370.0
+2024-25,PSS_July_2025_Table_1_12,Northern Ireland Executive,line_item,31617.0
+2024-25,PSS_July_2025_Table_1_12,Small and Independent Bodies,line_item,2921.0
+2024-25,PSS_July_2025_Table_1_12,Total departmental expenditure (5),total,1159310.0
+2024-25,PSS_July_2025_Table_1_12,Central government gross debt interest,line_item,84798.0
+2024-25,PSS_July_2025_Table_1_12,Locally financed expenditure,line_item,62285.0
+2024-25,PSS_July_2025_Table_1_12,Public sector depreciation,line_item,69045.0
+2024-25,PSS_July_2025_Table_1_12,Net expenditure transfers to the EU (6),line_item,-1186.0
+2024-25,PSS_July_2025_Table_1_12,Public corporations' own-financed capital expenditure,line_item,15831.0
+2024-25,PSS_July_2025_Table_1_12,Accounting adjustments,line_item,-104868.0
+2024-25,PSS_July_2025_Table_1_12,Total other expenditure (7),total,125906.0
+2024-25,PSS_July_2025_Table_1_12,Total Managed Expenditure (8),total,1285216.0

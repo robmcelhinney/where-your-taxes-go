@@ -1,0 +1,13 @@
+[project]
+name = "where-your-taxes-go"
+version = "0.1.0"
+description = "UK taxes and spending attribution API"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.116.0",
+  "uvicorn>=0.35.0",
+  "pydantic>=2.11.0",
+]
+
+[tool.uv]
+package = false

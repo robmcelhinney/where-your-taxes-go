@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Where Your Taxes Go UK | Tax Footprint Explorer</title>
+        <meta
+            name="description"
+            content="Estimate your UK tax footprint, see spending attribution by service, and explore regional redistribution and borrowing context."
+        />
+        <meta
+            name="keywords"
+            content="UK tax calculator, public spending, UK budget, tax breakdown, regional redistribution"
+        />
+        <meta property="og:title" content="Where Your Taxes Go UK" />
+        <meta
+            property="og:description"
+            content="Turn one salary number into a public-spending story."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="./social-share-card.svg" />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:title" content="Where Your Taxes Go UK" />
+        <meta
+            property="twitter:description"
+            content="Estimate your UK tax contribution and see where it flows."
+        />
+        <meta property="twitter:image" content="./social-share-card.svg" />
+        <link rel="canonical" href="https://example.com/where-your-taxes-go" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div class="bg-orb orb-a"></div>
+        <div class="bg-orb orb-b"></div>
+        <nav class="top-nav">
+            <a href="#salary">Calculator</a>
+            <a href="#methodology">Methodology</a>
+            <a href="#data-attribution">Data Attribution</a>
+        </nav>
+        <header class="hero" id="landing">
+            <p class="kicker">Where Your Taxes Go</p>
+            <h1>Turn one salary number into a public-spending story.</h1>
+            <p class="lede">
+                Estimate your UK tax contribution and see where it flows across
+                services and regions.
+            </p>
+        </header>
+
+        <main class="shell">
+            <section class="panel input-panel" id="salary">
+                <div>
+                    <h2>Salary Input</h2>
+                    <p class="muted">
+                        Input annual salary and optional assumptions, then run
+                        the model.
+                    </p>
+                </div>
+                <form id="tax-form" class="form-grid">
+                    <label>
+                        Annual income (GBP)
+                        <input
+                            type="number"
+                            id="annual-income"
+                            value="39000"
+                            min="0"
+                            step="100"
+                            required
+                        />
+                    </label>
+                    <label>
+                        Region
+                        <select id="region">
+                            <option>England</option>
+                            <option>North East</option>
+                            <option>North West</option>
+                            <option>Yorkshire and The Humber</option>
+                            <option>East Midlands</option>
+                            <option>West Midlands</option>
+                            <option>East of England</option>
+                            <option>London</option>
+                            <option>South East</option>
+                            <option>South West</option>
+                            <option>Wales</option>
+                            <option>Scotland</option>
+                            <option>Northern Ireland</option>
+                        </select>
+                    </label>
+                    <label>
+                        Tax year
+                        <select id="tax-year">
+                            <option>2025-26</option>
+                            <option>2024-25</option>
+                            <option>2023-24</option>
+                        </select>
+                    </label>
+                    <label>
+                        API base URL
+                        <input
+                            type="text"
+                            id="api-base"
+                            value="http://127.0.0.1:8000"
+                        />
+                    </label>
+                    <details class="assumption-dropdown">
+                        <summary>VAT Assumptions</summary>
+                        <div class="assumption-grid">
+                            <label class="inline-toggle">
+                                Include VAT estimate
+                                <input
+                                    type="checkbox"
+                                    id="include-vat"
+                                    checked
+                                />
+                            </label>
+                            <label>
+                                VATable spend ratio
+                                <span
+                                    class="help-dot"
+                                    title="Share of your post-income-tax and post-NI income assumed to be spent on standard-rated VAT purchases. Example: 0.6 means 60%."
+                                    >i</span
+                                >
+                                <input
+                                    type="number"
+                                    id="vat-ratio"
+                                    value="0.6"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                />
+                            </label>
+                        </div>
+                    </details>
+                    <details class="assumption-dropdown">
+                        <summary>Deductions and Reliefs</summary>
+                        <div class="assumption-grid">
+                            <label>
+                                Pension salary sacrifice (GBP/yr)
+                                <input
+                                    type="number"
+                                    id="pension-salary-sacrifice"
+                                    value="0"
+                                    min="0"
+                                    step="100"
+                                />
+                            </label>
+                            <label>
+                                Pension relief-at-source (gross GBP/yr)
+                                <input
+                                    type="number"
+                                    id="pension-relief-source"
+                                    value="0"
+                                    min="0"
+                                    step="100"
+                                />
+                            </label>
+                            <label>
+                                Gift Aid (gross GBP/yr)
+                                <input
+                                    type="number"
+                                    id="gift-aid"
+                                    value="0"
+                                    min="0"
+                                    step="100"
+                                />
+                            </label>
+                            <label>
+                                Other pre-tax deductions (GBP/yr)
+                                <input
+                                    type="number"
+                                    id="other-deductions"
+                                    value="0"
+                                    min="0"
+                                    step="100"
+                                />
+                            </label>
+                        </div>
+                    </details>
+                    <details class="assumption-dropdown">
+                        <summary>Household Modelling</summary>
+                        <div class="assumption-grid">
+                            <label>
+                                Partner annual income (GBP/yr)
+                                <input
+                                    type="number"
+                                    id="partner-income"
+                                    value="0"
+                                    min="0"
+                                    step="100"
+                                />
+                            </label>
+                            <label class="inline-toggle">
+                                Marriage allowance transfer
+                                <input
+                                    type="checkbox"
+                                    id="marriage-allowance"
+                                />
+                            </label>
+                        </div>
+                    </details>
+                    <details class="assumption-dropdown">
+                        <summary>Council Tax</summary>
+                        <div class="assumption-grid">
+                            <label>
+                                Postcode (for council lookup)
+                                <input
+                                    type="text"
+                                    id="postcode"
+                                    value=""
+                                    placeholder="e.g. SW1A 1AA"
+                                />
+                            </label>
+                            <label>
+                                Council (override name)
+                                <input
+                                    type="text"
+                                    id="council-name"
+                                    value=""
+                                    placeholder="Optional council name"
+                                />
+                            </label>
+                            <label>
+                                Council tax annual override (GBP)
+                                <input
+                                    type="number"
+                                    id="council-tax-override"
+                                    value=""
+                                    min="0"
+                                    step="10"
+                                    placeholder="Optional exact bill"
+                                />
+                            </label>
+                            <label>
+                                Council tax band
+                                <span
+                                    class="help-dot"
+                                    title="Auto uses regional average council tax. A-H applies a UK-wide band multiplier to that regional average."
+                                    >i</span
+                                >
+                                <select id="council-tax-band">
+                                    <option value="auto" selected>
+                                        Auto (regional average)
+                                    </option>
+                                    <option value="A">Band A</option>
+                                    <option value="B">Band B</option>
+                                    <option value="C">Band C</option>
+                                    <option value="D">Band D</option>
+                                    <option value="E">Band E</option>
+                                    <option value="F">Band F</option>
+                                    <option value="G">Band G</option>
+                                    <option value="H">Band H</option>
+                                </select>
+                            </label>
+                        </div>
+                    </details>
+                    <details class="assumption-dropdown">
+                        <summary>Tax Accuracy Mode</summary>
+                        <div class="assumption-grid">
+                            <label>
+                                UK income-tax nation
+                                <select id="uk-nation-tax">
+                                    <option value="england_ni" selected>
+                                        England / NI
+                                    </option>
+                                    <option value="wales">Wales</option>
+                                    <option value="scotland">Scotland</option>
+                                </select>
+                            </label>
+                            <label>
+                                Employment type
+                                <select id="employment-type">
+                                    <option value="employed" selected>
+                                        Employed
+                                    </option>
+                                    <option value="self_employed">
+                                        Self-employed
+                                    </option>
+                                    <option value="mixed">Mixed</option>
+                                </select>
+                            </label>
+                            <label>
+                                Student loan plan
+                                <select id="student-loan-plan">
+                                    <option value="none" selected>None</option>
+                                    <option value="1">Plan 1</option>
+                                    <option value="2">Plan 2</option>
+                                    <option value="4">Plan 4</option>
+                                    <option value="5">Plan 5</option>
+                                    <option value="postgrad">Postgraduate</option>
+                                </select>
+                            </label>
+                            <label>
+                                Savings interest (GBP/yr)
+                                <input
+                                    type="number"
+                                    id="savings-interest"
+                                    value="0"
+                                    min="0"
+                                    step="50"
+                                />
+                            </label>
+                            <label>
+                                Dividend income (GBP/yr)
+                                <input
+                                    type="number"
+                                    id="dividend-income"
+                                    value="0"
+                                    min="0"
+                                    step="50"
+                                />
+                            </label>
+                        </div>
+                    </details>
+                    <details class="assumption-dropdown">
+                        <summary>Historical Comparison</summary>
+                        <div class="assumption-grid">
+                            <label>
+                                Compare against tax year
+                                <select id="compare-tax-year">
+                                    <option value="none" selected>Off</option>
+                                    <option value="2025-26">2025-26</option>
+                                    <option value="2024-25">2024-25</option>
+                                    <option value="2023-24">2023-24</option>
+                                </select>
+                            </label>
+                        </div>
+                    </details>
+                    <details class="assumption-dropdown">
+                        <summary>Policy Simulation Mode</summary>
+                        <div class="assumption-grid">
+                            <label>
+                                Basic rate (e.g. 0.2)
+                                <input
+                                    type="number"
+                                    id="policy-basic-rate"
+                                    value=""
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                />
+                            </label>
+                            <label>
+                                Higher rate (e.g. 0.4)
+                                <input
+                                    type="number"
+                                    id="policy-higher-rate"
+                                    value=""
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                />
+                            </label>
+                            <label>
+                                NI main rate
+                                <input
+                                    type="number"
+                                    id="policy-ni-main-rate"
+                                    value=""
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                />
+                            </label>
+                            <label>
+                                VAT rate
+                                <input
+                                    type="number"
+                                    id="policy-vat-rate"
+                                    value=""
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                />
+                            </label>
+                        </div>
+                    </details>
+                    <p class="muted assumption-note">
+                        Council tax is currently an estimated regional average
+                        unless you choose a band. Banded mode applies standard
+                        UK band multipliers to the regional average. Deductions
+                        are simplified and do not cover all HMRC edge cases.
+                    </p>
+                    <button class="run" type="submit">
+                        Compute My Tax Footprint
+                    </button>
+                </form>
+            </section>
+
+            <section class="panel dashboard" id="dashboard">
+                <h2>Spending Breakdown Dashboard</h2>
+                <p class="muted">
+                    Direct tax matches PAYE-style comparisons; total also
+                    includes estimated VAT and council tax.
+                </p>
+                <p class="allocation-basis">
+                    Allocation basis: COFOG functional spending (not full UK
+                    TME budget buckets).
+                </p>
+                <div id="status" class="status">
+                    Run the model to load charts.
+                </div>
+                <div class="metric-grid" id="metric-grid"></div>
+                <div id="historical-compare" class="compare-note"></div>
+                <div id="take-home-view" class="take-home-view"></div>
+            </section>
+
+            <section class="panel" id="data-vintage-panel">
+                <h2>Data Vintage (As Of)</h2>
+                <div id="data-vintage" class="vintage-grid">
+                    <div class="muted">
+                        Run the model to load dataset dates.
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel viz-grid">
+                <article>
+                    <h3>Spending Pie Chart</h3>
+                    <p class="muted">
+                        Uses COFOG functional allocation for 2024-25. Some
+                        categories used in full-budget/TME charts are outside
+                        this basis.
+                    </p>
+                    <div id="pie-wrap" class="pie-wrap">
+                        <div id="pie" class="pie"></div>
+                        <ul id="pie-legend" class="legend"></ul>
+                    </div>
+                </article>
+
+                <article>
+                    <h3>Sankey Flow Diagram</h3>
+                    <svg
+                        id="sankey"
+                        viewBox="0 0 900 420"
+                        aria-label="Regional redistribution flows"
+                    ></svg>
+                </article>
+            </section>
+
+            <section class="panel">
+                <div class="split-head">
+                    <h2>UK Redistribution Map</h2>
+                    <div class="service-controls">
+                        <label>
+                            Map mode
+                            <select id="map-mode">
+                                <option value="total" selected>
+                                    Total net balance
+                                </option>
+                                <option value="per_capita">
+                                    Per-capita net balance
+                                </option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <p class="muted">
+                    Tile map by region: green = net contributor, red = net
+                    recipient.
+                </p>
+                <div id="uk-map" class="uk-map"></div>
+            </section>
+
+            <section class="panel" id="borrowing-context">
+                <h2>UK Borrowing Context</h2>
+                <p class="muted">
+                    Estimated from selected regional dataset year (revenue vs
+                    expenditure).
+                </p>
+                <div id="borrowing-metrics" class="borrowing-metrics"></div>
+                <div class="borrowing-bars" id="borrowing-bars"></div>
+            </section>
+
+            <section class="panel" id="share-panel">
+                <h2>Share & Export</h2>
+                <div class="share-row">
+                    <button id="copy-share-link" type="button">
+                        Copy shareable result link
+                    </button>
+                    <a id="share-x" target="_blank" rel="noopener"
+                        >Share on X</a
+                    >
+                    <a id="share-linkedin" target="_blank" rel="noopener"
+                        >Share on LinkedIn</a
+                    >
+                    <button id="export-journalist" type="button">
+                        Journalist export (JSON + CSV)
+                    </button>
+                    <button id="export-pdf" type="button">
+                        Export PDF report
+                    </button>
+                </div>
+                <p class="muted">
+                    Share links encode your current assumptions in URL
+                    parameters.
+                </p>
+            </section>
+
+            <section class="panel">
+                <div class="split-head">
+                    <h2>Service Impact Cards</h2>
+                    <div class="service-controls">
+                        <label>
+                            View
+                            <select id="services-view">
+                                <option value="cards">Cards</option>
+                                <option value="table">Table</option>
+                            </select>
+                        </label>
+                        <label>
+                            Table rows
+                            <select id="table-limit">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="all">All</option>
+                            </select>
+                        </label>
+                        <label class="inline-toggle">
+                            Group by category
+                            <span
+                                class="help-dot"
+                                title="Groups services by COFOG major category (Classification of the Functions of Government)."
+                                >i</span
+                            >
+                            <input type="checkbox" id="services-grouped" />
+                        </label>
+                    </div>
+                    <div class="pager">
+                        <button id="prev-services" type="button">Prev</button>
+                        <span id="services-page">Page 1</span>
+                        <button id="next-services" type="button">Next</button>
+                    </div>
+                </div>
+                <div id="service-cards" class="service-cards"></div>
+            </section>
+
+            <section class="panel" id="scenario-compare">
+                <div class="split-head">
+                    <h2>Scenario Compare</h2>
+                    <div class="share-row">
+                        <button id="save-scenario" type="button">
+                            Save current scenario
+                        </button>
+                        <button id="clear-scenarios" type="button">
+                            Clear scenarios
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="services-table" id="scenario-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Income</th>
+                                <th>Region</th>
+                                <th>Total tax</th>
+                                <th>Take-home</th>
+                                <th>Effective rate</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="panel" id="methodology">
+                <h2>Methodology</h2>
+                <p class="muted">
+                    We estimate personal tax (income tax, NI, VAT assumption,
+                    and regional-average council tax), then allocate your share
+                    across UK spending functions based on national totals.
+                </p>
+                <p class="muted">
+                    Allocation uses COFOG functional categories, so totals may
+                    differ from full-budget/TME style breakdowns (for example
+                    charts that explicitly include depreciation, VAT refunds, or
+                    top-level devolved/local-government buckets).
+                </p>
+                <p class="muted">
+                    Regional redistribution uses ONS country/region revenue and
+                    expenditure snapshots, with flow links generated
+                    proportionally from net-contributor to net-recipient
+                    regions.
+                </p>
+            </section>
+
+            <section class="panel" id="data-attribution">
+                <h2>Data Attribution</h2>
+                <p class="muted">
+                    Sources include HM Treasury PESA/PSS tables and ONS public
+                    finance releases, including country/regional receipts,
+                    expenditure, and PSNB ex borrowing benchmark.
+                </p>
+                <p class="muted">
+                    Source URLs and extraction notes are documented in the
+                    repository file <code>docs/data-sources.md</code>.
+                </p>
+                <div class="vintage-grid">
+                    <a
+                        class="vintage-item"
+                        target="_blank"
+                        rel="noopener"
+                        href="https://www.gov.uk/government/statistics/public-expenditure-statistical-analyses-2025"
+                    >
+                        <div class="k">Spending functions source</div>
+                        <div class="v">HM Treasury PESA 2025</div>
+                    </a>
+                    <a
+                        class="vintage-item"
+                        target="_blank"
+                        rel="noopener"
+                        href="https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/articles/countryandregionalpublicsectorfinances/financialyearending2024"
+                    >
+                        <div class="k">Regional finance source</div>
+                        <div class="v">ONS country/regional public finances</div>
+                    </a>
+                </div>
+            </section>
+
+            <section class="panel" id="trust-layer">
+                <h2>Model Limitations & Trust Notes</h2>
+                <ul class="muted">
+                    <li>
+                        Included: PAYE-style income tax, NI, VAT estimate,
+                        council tax estimate/override, and spending allocation.
+                    </li>
+                    <li>
+                        Accuracy mode adds student loan, savings/dividend tax,
+                        simplified Scottish rates, and self-employed NI.
+                    </li>
+                    <li>
+                        Excluded: full HMRC edge cases, benefits interactions,
+                        and complete devolved/household entitlement rules.
+                    </li>
+                    <li id="trust-last-verified">Last verified: loading…</li>
+                </ul>
+            </section>
+        </main>
+
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                "name": "Where Your Taxes Go UK",
+                "applicationCategory": "FinanceApplication",
+                "description": "UK tax footprint and public spending explorer",
+                "operatingSystem": "Web"
+            }
+        </script>
+        <script src="./app.js" defer></script>
+    </body>
+</html>

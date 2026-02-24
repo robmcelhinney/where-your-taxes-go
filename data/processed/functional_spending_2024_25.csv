@@ -1,0 +1,110 @@
+year,source_table,function_label,row_type,amount_m_gbp
+2024-25,PESA_2025_5_2,"1.1 Executive and legislative organs, financial and fiscal affairs, external affairs",sub_function,17617.0
+2024-25,PESA_2025_5_2,1.2 Foreign economic aid (1),sub_function,7687.0
+2024-25,PESA_2025_5_2,1.3 General services,sub_function,1947.0
+2024-25,PESA_2025_5_2,1.5 R&D general public services,sub_function,548.0
+2024-25,PESA_2025_5_2,1.6 General public services n.e.c.,sub_function,5077.0
+2024-25,PESA_2025_5_2,"1.7 Public debt transactions (2), (3)",sub_function,124715.0
+2024-25,PESA_2025_5_2,of which: central government debt interest,of_which,84798.0
+2024-25,PESA_2025_5_2,of which: local government debt interest,of_which,951.0
+2024-25,PESA_2025_5_2,of which: public corporation debt interest,of_which,487.0
+2024-25,PESA_2025_5_2,of which:Bank of England,of_which,20216.0
+2024-25,PESA_2025_5_2,of which: public sector pensions,of_which,18263.0
+2024-25,PESA_2025_5_2,Total general public services,function_total,157591.0
+2024-25,PESA_2025_5_2,2.1 Military defence,sub_function,57039.0
+2024-25,PESA_2025_5_2,2.2 Civil defence,sub_function,64.0
+2024-25,PESA_2025_5_2,2.3 Foreign military aid,sub_function,3485.0
+2024-25,PESA_2025_5_2,2.4 R&D defence,sub_function,2810.0
+2024-25,PESA_2025_5_2,2.5 Defence n.e.c.,sub_function,250.0
+2024-25,PESA_2025_5_2,Total defence,function_total,63648.0
+2024-25,PESA_2025_5_2,3.1 Police services,sub_function,28746.0
+2024-25,PESA_2025_5_2,of which: immigration and citizenship,of_which,3692.0
+2024-25,PESA_2025_5_2,of which: other police services,of_which,25054.0
+2024-25,PESA_2025_5_2,3.2 Fire-protection services,sub_function,3943.0
+2024-25,PESA_2025_5_2,3.3 Law courts,sub_function,9241.0
+2024-25,PESA_2025_5_2,3.4 Prisons,sub_function,7406.0
+2024-25,PESA_2025_5_2,3.5 R&D public order and safety,sub_function,1.0
+2024-25,PESA_2025_5_2,3.6 Public order and safety n.e.c.,sub_function,2034.0
+2024-25,PESA_2025_5_2,Total public order and safety,function_total,51370.0
+2024-25,PESA_2025_5_2,"4.1 General economic, commercial and labour affairs",sub_function,18162.0
+2024-25,PESA_2025_5_2,"4.2 Agriculture, forestry, fishing and hunting",sub_function,6296.0
+2024-25,PESA_2025_5_2,of which: market support,of_which,2518.0
+2024-25,PESA_2025_5_2,"of which: other agriculture, food and fisheries policy",of_which,3538.0
+2024-25,PESA_2025_5_2,of which: forestry,of_which,240.0
+2024-25,PESA_2025_5_2,4.3 Fuel and energy (5),sub_function,3817.0
+2024-25,PESA_2025_5_2,"4.4 Mining, manufacturing and construction",sub_function,264.0
+2024-25,PESA_2025_5_2,4.5 Transport,sub_function,46415.0
+2024-25,PESA_2025_5_2,of which: national roads,of_which,6453.0
+2024-25,PESA_2025_5_2,of which: local roads,of_which,6389.0
+2024-25,PESA_2025_5_2,of which: local public transport,of_which,4708.0
+2024-25,PESA_2025_5_2,of which: railway,of_which,26667.0
+2024-25,PESA_2025_5_2,of which: other transport,of_which,2199.0
+2024-25,PESA_2025_5_2,4.6 Communication,sub_function,986.0
+2024-25,PESA_2025_5_2,4.7 Other industries,sub_function,291.0
+2024-25,PESA_2025_5_2,4.8 R&D economic affairs,sub_function,9677.0
+2024-25,PESA_2025_5_2,4.9 Economic affairs n.e.c.,sub_function,885.0
+2024-25,PESA_2025_5_2,Total economic affairs,function_total,86793.0
+2024-25,PESA_2025_5_2,5.1 Waste management,sub_function,11390.0
+2024-25,PESA_2025_5_2,5.3 Pollution abatement,sub_function,1357.0
+2024-25,PESA_2025_5_2,5.4 Protection of biodiversity and landscape,sub_function,609.0
+2024-25,PESA_2025_5_2,5.5 R&D environment protection,sub_function,331.0
+2024-25,PESA_2025_5_2,5.6 Environment protection n.e.c.,sub_function,3453.0
+2024-25,PESA_2025_5_2,Total environment protection,function_total,17141.0
+2024-25,PESA_2025_5_2,6.1 Housing development,sub_function,14411.0
+2024-25,PESA_2025_5_2,of which: local authority housing,of_which,11331.0
+2024-25,PESA_2025_5_2,of which: other social housing,of_which,3081.0
+2024-25,PESA_2025_5_2,6.2 Community development,sub_function,4734.0
+2024-25,PESA_2025_5_2,6.3 Water supply,sub_function,1302.0
+2024-25,PESA_2025_5_2,6.4 Street lighting,sub_function,993.0
+2024-25,PESA_2025_5_2,6.5 R&D housing and community amenities,sub_function,5.0
+2024-25,PESA_2025_5_2,6.6 Housing and community amenities n.e.c.,sub_function,874.0
+2024-25,PESA_2025_5_2,Total housing and community amenities,function_total,22319.0
+2024-25,PESA_2025_5_2,Medical services,other,231540.0
+2024-25,PESA_2025_5_2,Medical research,other,2479.0
+2024-25,PESA_2025_5_2,Central and other health services,other,7816.0
+2024-25,PESA_2025_5_2,Total health,function_total,241835.0
+2024-25,PESA_2025_5_2,8.1 Recreational and sporting services,sub_function,3779.0
+2024-25,PESA_2025_5_2,8.2 Cultural services,sub_function,4768.0
+2024-25,PESA_2025_5_2,8.3 Broadcasting and publishing services,sub_function,5559.0
+2024-25,PESA_2025_5_2,8.4 Religious and other community services,sub_function,127.0
+2024-25,PESA_2025_5_2,"8.5 R&D recreation, culture and religion",sub_function,108.0
+2024-25,PESA_2025_5_2,"8.6 Recreation, culture and religion n.e.c.",sub_function,180.0
+2024-25,PESA_2025_5_2,"Total recreation, culture and religion",function_total,14522.0
+2024-25,PESA_2025_5_2,9.1 Pre-primary and primary education,sub_function,40100.0
+2024-25,PESA_2025_5_2,of which: under fives,of_which,7355.0
+2024-25,PESA_2025_5_2,of which: primary education,of_which,32745.0
+2024-25,PESA_2025_5_2,9.2 Secondary education (7),sub_function,60582.0
+2024-25,PESA_2025_5_2,9.3 Post-secondary non-tertiary education,sub_function,961.0
+2024-25,PESA_2025_5_2,9.4 Tertiary education,sub_function,4510.0
+2024-25,PESA_2025_5_2,9.5 Education not definable by level,sub_function,1369.0
+2024-25,PESA_2025_5_2,9.6 Subsidiary services to education,sub_function,5921.0
+2024-25,PESA_2025_5_2,9.7 R&D education,sub_function,2824.0
+2024-25,PESA_2025_5_2,9.8 Education n.e.c.,sub_function,2409.0
+2024-25,PESA_2025_5_2,Total education,function_total,118674.0
+2024-25,PESA_2025_5_2,of which: personal social services,of_which,51150.0
+2024-25,PESA_2025_5_2,10.1 Sickness and disability,sub_function,83608.0
+2024-25,PESA_2025_5_2,of which: personal social services,of_which,16454.0
+2024-25,PESA_2025_5_2,"of which: incapacity, disability and injury benefits",of_which,67154.0
+2024-25,PESA_2025_5_2,10.2 Old age,sub_function,162692.0
+2024-25,PESA_2025_5_2,of which: personal social services,of_which,16150.0
+2024-25,PESA_2025_5_2,of which: pensions,of_which,146542.0
+2024-25,PESA_2025_5_2,10.3 Survivors,sub_function,1367.0
+2024-25,PESA_2025_5_2,10.4  Family and children,sub_function,33633.0
+2024-25,PESA_2025_5_2,of which: personal social services,of_which,16680.0
+2024-25,PESA_2025_5_2,"of which: family benefits, income support and tax credits",of_which,16953.0
+2024-25,PESA_2025_5_2,10.5 Unemployment,sub_function,1303.0
+2024-25,PESA_2025_5_2,of which: other unemployment benefits,of_which,1303.0
+2024-25,PESA_2025_5_2,10.6 Housing,sub_function,17003.0
+2024-25,PESA_2025_5_2,10.7 Social exclusion n.e.c. (8),sub_function,76059.0
+2024-25,PESA_2025_5_2,of which: personal social services,of_which,1866.0
+2024-25,PESA_2025_5_2,"of which: family benefits, income support, Universal Credit and tax credits",of_which,74193.0
+2024-25,PESA_2025_5_2,10.9 Social protection n.e.c.,sub_function,8269.0
+2024-25,PESA_2025_5_2,Total social protection,function_total,383934.0
+2024-25,PESA_2025_5_2,VAT-based and GNI-based contributions (net of abatement and collection costs),other,-1193.0
+2024-25,PESA_2025_5_2,EU gross contribution pre-abatement and after deduction of collection costs,other,-1169.0
+2024-25,PESA_2025_5_2,Traditional Own Resources (without deduction of collection costs),other,-24.0
+2024-25,PESA_2025_5_2,EU receipts,other,-240.0
+2024-25,PESA_2025_5_2,Total EU transactions,function_total,-1433.0
+2024-25,PESA_2025_5_2,Public sector expenditure on services,other,1156393.0
+2024-25,PESA_2025_5_2,Accounting adjustments,other,128823.0
+2024-25,PESA_2025_5_2,Total Managed Expenditure (10),function_total,1285216.0
