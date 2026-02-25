@@ -1788,47 +1788,7 @@ async function loadServicesPage(nextPage) {
 }
 
 function buildShareUrl() {
-    const current = {
-        income: document.getElementById("annual-income").value,
-        region: document.getElementById("region").value,
-        tax_year: document.getElementById("tax-year").value,
-        compare_tax_year: document.getElementById("compare-tax-year").value,
-        council_tax_band: document.getElementById("council-tax-band").value,
-        postcode: document.getElementById("postcode").value,
-        council_name: document.getElementById("council-name").value,
-        council_tax_override: document.getElementById("council-tax-override")
-            .value,
-        uk_nation_tax: document.getElementById("uk-nation-tax").value,
-        employment_type: document.getElementById("employment-type").value,
-        student_loan_plan: document.getElementById("student-loan-plan").value,
-        savings_interest: document.getElementById("savings-interest").value,
-        dividend_income: document.getElementById("dividend-income").value,
-        vat_on: document.getElementById("include-vat").checked ? "1" : "0",
-        vat_ratio: document.getElementById("vat-ratio").value,
-        partner_income: document.getElementById("partner-income").value,
-        marriage_allowance: document.getElementById("marriage-allowance")
-            .checked
-            ? "1"
-            : "0",
-        pension_salary_sacrifice: document.getElementById(
-            "pension-salary-sacrifice",
-        ).value,
-        pension_relief_source: document.getElementById("pension-relief-source")
-            .value,
-        gift_aid: document.getElementById("gift-aid").value,
-        other_deductions: document.getElementById("other-deductions").value,
-        policy_basic_rate: document.getElementById("policy-basic-rate").value,
-        policy_higher_rate: document.getElementById("policy-higher-rate").value,
-        policy_ni_main_rate: document.getElementById("policy-ni-main-rate")
-            .value,
-        policy_vat_rate: document.getElementById("policy-vat-rate").value,
-    }
-    const p = new URLSearchParams()
-    Object.entries(current).forEach(([k, v]) => {
-        if (v !== DEFAULT_FORM_STATE[k]) p.set(k, v)
-    })
-    const q = p.toString()
-    return `${window.location.origin}${window.location.pathname}${q ? `?${q}` : ""}`
+    return `${window.location.origin}${window.location.pathname}`
 }
 
 function updateAddressBar() {
