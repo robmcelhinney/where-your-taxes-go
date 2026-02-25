@@ -88,7 +88,10 @@ function applyTheme(theme) {
     const toggle = document.getElementById("theme-toggle")
     if (toggle) {
         toggle.setAttribute("data-theme", theme)
-        toggle.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} mode`)
+        toggle.setAttribute(
+            "aria-label",
+            `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
+        )
         toggle.setAttribute(
             "title",
             `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
@@ -102,7 +105,9 @@ function initTheme() {
         applyTheme(saved)
         return
     }
-    const preferredDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    const preferredDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+    ).matches
     applyTheme(preferredDark ? "dark" : "light")
 }
 
@@ -1169,43 +1174,6 @@ document
         await navigator.clipboard.writeText(url)
         setStatus("Shareable link copied to clipboard.")
     })
-
-document
-    .getElementById("export-journalist")
-    .addEventListener("click", async () => {
-        if (!state.latestTax) {
-            setStatus("Run the model first before exporting.")
-            return
-        }
-        setStatus("Building journalist export...")
-        try {
-            const payload = { ...state.latestTax }
-            const exportData = await post("/journalist/export", payload)
-            const stamp = new Date().toISOString().slice(0, 10)
-            downloadTextFile(
-                `taxes-export-${stamp}.json`,
-                JSON.stringify(exportData, null, 2),
-                "application/json",
-            )
-            downloadTextFile(
-                `services-impact-${stamp}.csv`,
-                exportData.services_csv,
-                "text/csv",
-            )
-            downloadTextFile(
-                `regional-balances-${stamp}.csv`,
-                exportData.regional_balances_csv,
-                "text/csv",
-            )
-            setStatus("Journalist export downloaded (JSON + CSV files).")
-        } catch (err) {
-            setStatus(`Error: ${err.message}`)
-        }
-    })
-
-document.getElementById("export-pdf").addEventListener("click", () => {
-    window.print()
-})
 
 const SCENARIO_KEY = "taxes_saved_scenarios_v1"
 
