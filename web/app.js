@@ -1836,8 +1836,7 @@ function buildShareUrl() {
 }
 
 function updateAddressBar() {
-    const url = buildStateUrl()
-    history.replaceState(null, "", url)
+    // Privacy mode: do not write inputs/assumptions into browser history.
 }
 
 function syncShareUI() {
