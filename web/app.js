@@ -780,6 +780,7 @@ function renderSankey(flows, balances) {
         .filter((b) => b.net_balance_m_gbp < 0)
         .sort((a, b) => a.net_balance_m_gbp - b.net_balance_m_gbp)
 
+    const width = Math.max(320, svg.clientWidth || 900)
     const h = 420
     const donorStep = h / (donors.length + 1)
     const recipStep = h / (recips.length + 1)
@@ -795,18 +796,20 @@ function renderSankey(flows, balances) {
     const css = getComputedStyle(document.documentElement)
     const sankeyBg = css.getPropertyValue("--surface").trim() || "#ffffff"
     const sankeyText = css.getPropertyValue("--text").trim() || "#1f2937"
-    const leftLabelX = 16
-    const leftFlowX = 88
-    const rightFlowX = 740
-    const rightLabelX = 890
-    const c1 = 270
-    const c2 = 555
+    const leftLabelX = Math.max(8, width * 0.02)
+    const leftFlowX = Math.max(52, width * 0.14)
+    const rightFlowX = Math.max(leftFlowX + 120, width * 0.82)
+    const rightLabelX = width - 10
+    const c1 = width * 0.34
+    const c2 = width * 0.62
+    const labelFont = width < 560 ? "11" : "12"
     svg.innerHTML = ""
+    svg.setAttribute("viewBox", `0 0 ${width} ${h}`)
     const ns = "http://www.w3.org/2000/svg"
     const bg = document.createElementNS(ns, "rect")
     bg.setAttribute("x", "0")
     bg.setAttribute("y", "0")
-    bg.setAttribute("width", "900")
+    bg.setAttribute("width", `${width}`)
     bg.setAttribute("height", "420")
     bg.setAttribute("fill", sankeyBg)
     svg.appendChild(bg)
@@ -817,7 +820,7 @@ function renderSankey(flows, balances) {
         const text = document.createElementNS(ns, "text")
         text.setAttribute("x", `${leftLabelX}`)
         text.setAttribute("y", `${y + 4}`)
-        text.setAttribute("font-size", "12")
+        text.setAttribute("font-size", labelFont)
         text.setAttribute("font-weight", "700")
         text.setAttribute("fill", sankeyText)
         text.textContent = d.geography_name
@@ -829,7 +832,7 @@ function renderSankey(flows, balances) {
         const text = document.createElementNS(ns, "text")
         text.setAttribute("x", `${rightLabelX}`)
         text.setAttribute("y", `${y + 4}`)
-        text.setAttribute("font-size", "12")
+        text.setAttribute("font-size", labelFont)
         text.setAttribute("font-weight", "700")
         text.setAttribute("text-anchor", "end")
         text.setAttribute("fill", sankeyText)
@@ -1258,6 +1261,12 @@ document.getElementById("save-scenario").addEventListener("click", () => {
 document.getElementById("clear-scenarios").addEventListener("click", () => {
     saveScenarios([])
     renderScenarioTable()
+})
+
+window.addEventListener("resize", () => {
+    if (state.latestFlows?.flows && state.latestFlows?.balances) {
+        renderSankey(state.latestFlows.flows, state.latestFlows.balances)
+    }
 })
 
 document.getElementById("theme-toggle").addEventListener("click", () => {
