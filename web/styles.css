@@ -1,5 +1,9 @@
 :root {
   --bg: #f6f7f8;
+  --bg-grad-a: #eaf2ff;
+  --bg-grad-b: #eef3ff;
+  --bg-grad-c: #f4f6fb;
+  --bg-noise-opacity: 0.055;
   --surface: #ffffff;
   --surface-muted: #fafbfc;
   --text: #111827;
@@ -19,6 +23,10 @@
 
 :root[data-theme="dark"] {
   --bg: #0b1117;
+  --bg-grad-a: #112236;
+  --bg-grad-b: #16283c;
+  --bg-grad-c: #0a1320;
+  --bg-noise-opacity: 0.08;
   --surface: #111a23;
   --surface-muted: #16212d;
   --text: #e5e7eb;
@@ -47,8 +55,36 @@ body {
   margin: 0;
   font-family: "Manrope", sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
   line-height: 1.45;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(1300px 860px at 8% -10%, var(--bg-grad-a) 0%, transparent 62%),
+    radial-gradient(1200px 820px at 92% 2%, var(--bg-grad-b) 0%, transparent 60%),
+    linear-gradient(162deg, var(--bg-grad-c) 0%, var(--bg) 78%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--bg-noise-opacity);
+  background-image:
+    radial-gradient(circle at 18% 20%, #000 0.8px, transparent 0.95px),
+    radial-gradient(circle at 78% 62%, #000 0.7px, transparent 0.9px),
+    radial-gradient(circle at 50% 84%, #000 0.75px, transparent 0.9px);
+  background-size: 16px 16px, 20px 20px, 24px 24px;
 }
 
 .bg-orb {

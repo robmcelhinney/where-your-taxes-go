@@ -14,6 +14,7 @@ const state = {
     latestTaxResponse: null,
     latestBreakdown: null,
     latestFlows: null,
+    frontendBundle: null,
     mapMode: "total",
     initialLoadDone: false,
 }
@@ -61,20 +62,85 @@ const palette = [
     "#92400e",
 ]
 
-const REGION_POPULATION_ITL1 = {
-    "North East": 2684000,
-    "North West": 7614000,
-    "Yorkshire and The Humber": 5567000,
-    "East Midlands": 4941000,
-    "West Midlands": 6029000,
-    "East of England": 6410000,
-    London: 8962000,
-    "South East": 9417000,
-    "South West": 5817000,
-    Wales: 3133000,
-    Scotland: 5490000,
-    "Northern Ireland": 1916000,
+const COUNCIL_TAX_AVERAGE_BY_REGION = {
+    "north east": 2345.0,
+    "north west": 2280.0,
+    "yorkshire and the humber": 2240.0,
+    "east midlands": 2310.0,
+    "west midlands": 2290.0,
+    "east of england": 2440.0,
+    london: 2170.0,
+    "south east": 2435.0,
+    "south west": 2445.0,
+    england: 2280.0,
+    wales: 2200.0,
+    scotland: 1590.0,
+    "northern ireland": 1250.0,
 }
+
+const COUNCIL_TAX_BAND_MULTIPLIER = {
+    A: 6 / 9,
+    B: 7 / 9,
+    C: 8 / 9,
+    D: 1.0,
+    E: 11 / 9,
+    F: 13 / 9,
+    G: 15 / 9,
+    H: 18 / 9,
+}
+
+const TAX_PARAMS_BY_YEAR = {
+    "2023-24": {
+        personal_allowance: 12570,
+        basic_rate_limit: 37700,
+        higher_rate_threshold: 125140,
+        basic_rate: 0.2,
+        higher_rate: 0.4,
+        additional_rate: 0.45,
+        ni_primary_threshold: 12570,
+        ni_upper_earnings_limit: 50270,
+        ni_main_rate: 0.12,
+        ni_upper_rate: 0.02,
+        vat_rate: 0.2,
+    },
+    "2024-25": {
+        personal_allowance: 12570,
+        basic_rate_limit: 37700,
+        higher_rate_threshold: 125140,
+        basic_rate: 0.2,
+        higher_rate: 0.4,
+        additional_rate: 0.45,
+        ni_primary_threshold: 12570,
+        ni_upper_earnings_limit: 50270,
+        ni_main_rate: 0.08,
+        ni_upper_rate: 0.02,
+        vat_rate: 0.2,
+    },
+    "2025-26": {
+        personal_allowance: 12570,
+        basic_rate_limit: 37700,
+        higher_rate_threshold: 125140,
+        basic_rate: 0.2,
+        higher_rate: 0.4,
+        additional_rate: 0.45,
+        ni_primary_threshold: 12570,
+        ni_upper_earnings_limit: 50270,
+        ni_main_rate: 0.08,
+        ni_upper_rate: 0.02,
+        vat_rate: 0.2,
+    },
+}
+
+const STUDENT_LOAN_PLAN = {
+    1: [24990.0, 0.09],
+    2: [27295.0, 0.09],
+    4: [31395.0, 0.09],
+    5: [25000.0, 0.09],
+    postgrad: [21000.0, 0.06],
+}
+
+const FRONTEND_BUNDLE_PATH = "./data/frontend_bundle.json"
+const postcodeCache = new Map()
 
 const THEME_KEY = "taxes_theme"
 
@@ -261,15 +327,477 @@ function sortServices(items) {
 }
 
 async function post(path, body) {
+    const base = (state.apiBase || "").trim().toLowerCase()
+    if (!base || base === "local") {
+        return localPost(path, body)
+    }
     const r = await fetch(`${state.apiBase}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
     })
-    if (!r.ok) {
-        throw new Error(`${path} failed (${r.status})`)
-    }
+    if (!r.ok) throw new Error(`${path} failed (${r.status})`)
     return r.json()
+}
+
+function round2(v) {
+    return Math.round(v * 100) / 100
+}
+
+function getTaxParams(taxYear) {
+    return TAX_PARAMS_BY_YEAR[taxYear] || TAX_PARAMS_BY_YEAR["2025-26"]
+}
+
+function estimateIncomeTaxWithReliefs(annualIncome, p, extension = 0) {
+    const taper = Math.max(0, annualIncome - 100000) / 2
+    const personalAllowance = Math.max(0, p.personal_allowance - taper)
+    const taxable = Math.max(0, annualIncome - personalAllowance)
+    const effectiveBasic = Math.max(0, p.basic_rate_limit + extension)
+    const basicTaxable = Math.min(taxable, effectiveBasic)
+    const higherWidth = Math.max(
+        0,
+        p.higher_rate_threshold - personalAllowance - effectiveBasic,
+    )
+    const higherTaxable = Math.min(
+        Math.max(0, taxable - effectiveBasic),
+        higherWidth,
+    )
+    const additionalTaxable = Math.max(0, taxable - basicTaxable - higherTaxable)
+    return round2(
+        basicTaxable * p.basic_rate +
+            higherTaxable * p.higher_rate +
+            additionalTaxable * p.additional_rate,
+    )
+}
+
+function estimateIncomeTaxScotland(annualIncome, p) {
+    const taper = Math.max(0, annualIncome - 100000) / 2
+    const personalAllowance = Math.max(0, p.personal_allowance - taper)
+    let remaining = Math.max(0, annualIncome - personalAllowance)
+    const bands = [
+        [2306, 0.19],
+        [13991 - 2306, 0.2],
+        [31092 - 13991, 0.21],
+        [62943 - 31092, 0.42],
+    ]
+    let total = 0
+    for (const [width, rate] of bands) {
+        const take = Math.min(remaining, width)
+        if (take <= 0) break
+        total += take * rate
+        remaining -= take
+    }
+    if (remaining > 0) total += remaining * 0.47
+    return round2(total)
+}
+
+function estimateNationalInsurance(annualIncome, p) {
+    if (annualIncome <= p.ni_primary_threshold) return 0
+    if (annualIncome <= p.ni_upper_earnings_limit) {
+        return round2((annualIncome - p.ni_primary_threshold) * p.ni_main_rate)
+    }
+    const main =
+        (p.ni_upper_earnings_limit - p.ni_primary_threshold) * p.ni_main_rate
+    const upper = (annualIncome - p.ni_upper_earnings_limit) * p.ni_upper_rate
+    return round2(main + upper)
+}
+
+function estimateSelfEmployedNI(annualIncome) {
+    const class2 = annualIncome >= 12570 ? 179.4 : 0
+    const class4main = Math.max(0, Math.min(annualIncome, 50270) - 12570) * 0.06
+    const class4upper = Math.max(0, annualIncome - 50270) * 0.02
+    return round2(class2 + class4main + class4upper)
+}
+
+function estimateVat(annualIncome, incomeTax, ni, ratio, p) {
+    const disposable = Math.max(0, annualIncome - incomeTax - ni)
+    const vatable = disposable * ratio
+    return round2(vatable * (p.vat_rate / (1 + p.vat_rate)))
+}
+
+function estimateCouncilTax(region, band = "auto") {
+    const key = String(region || "England").trim().toLowerCase()
+    const base = COUNCIL_TAX_AVERAGE_BY_REGION[key] ?? COUNCIL_TAX_AVERAGE_BY_REGION.england
+    const b = String(band || "auto").toUpperCase()
+    if (b === "AUTO") return round2(base)
+    const mult = COUNCIL_TAX_BAND_MULTIPLIER[b]
+    return round2(mult ? base * mult : base)
+}
+
+function estimateSavingsTax(annualIncome, savings) {
+    if (!savings) return 0
+    let allowance = 1000
+    let rate = 0.2
+    if (annualIncome > 50270 && annualIncome <= 125140) {
+        allowance = 500
+        rate = 0.4
+    } else if (annualIncome > 125140) {
+        allowance = 0
+        rate = 0.45
+    }
+    return round2(Math.max(0, savings - allowance) * rate)
+}
+
+function estimateDividendTax(annualIncome, dividends) {
+    if (!dividends) return 0
+    const taxable = Math.max(0, dividends - 500)
+    const rate =
+        annualIncome <= 50270 ? 0.0875 : annualIncome <= 125140 ? 0.3375 : 0.3935
+    return round2(taxable * rate)
+}
+
+function estimateStudentLoan(annualIncome, plan) {
+    if (!plan || plan === "none") return 0
+    const [threshold, rate] = STUDENT_LOAN_PLAN[plan] || [1e9, 0]
+    return round2(Math.max(0, annualIncome - threshold) * rate)
+}
+
+async function lookupPostcode(postcode) {
+    const p = String(postcode || "").trim()
+    if (!p) return null
+    if (postcodeCache.has(p)) return postcodeCache.get(p)
+    try {
+        const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(p)}`)
+        if (!r.ok) return null
+        const j = await r.json()
+        const out = {
+            postcode: j?.result?.postcode || p,
+            council_name: j?.result?.admin_district || "",
+            region: j?.result?.region || "",
+            country: j?.result?.country || "",
+        }
+        postcodeCache.set(p, out)
+        return out
+    } catch {
+        return null
+    }
+}
+
+async function ensureFrontendBundle() {
+    if (state.frontendBundle) return state.frontendBundle
+    const r = await fetch(FRONTEND_BUNDLE_PATH, { cache: "no-store" })
+    if (!r.ok) throw new Error(`Failed to load ${FRONTEND_BUNDLE_PATH}`)
+    state.frontendBundle = await r.json()
+    return state.frontendBundle
+}
+
+function paginate(items, page, pageSize) {
+    const start = (page - 1) * pageSize
+    return [items.slice(start, start + pageSize), items.length]
+}
+
+async function localTaxEstimate(req) {
+    const result = await localTaxEstimateCore(req)
+    const compareYear = req.compare_tax_year || "none"
+    if (compareYear !== "none" && compareYear !== req.tax_year) {
+        const cmp = await localTaxEstimateCore({
+            ...req,
+            tax_year: compareYear,
+            compare_tax_year: "none",
+        })
+        const delta = round2(cmp.total_estimated_tax_gbp - result.total_estimated_tax_gbp)
+        result.historical_comparison = {
+            compare_tax_year: compareYear,
+            total_estimated_tax_gbp: cmp.total_estimated_tax_gbp,
+            delta_vs_selected_gbp: delta,
+            delta_vs_selected_percent: round2(
+                result.total_estimated_tax_gbp
+                    ? (delta / result.total_estimated_tax_gbp) * 100
+                    : 0,
+            ),
+        }
+    }
+    return result
+}
+
+async function localTaxEstimateCore(req) {
+    const p = {
+        ...getTaxParams(req.tax_year || "2025-26"),
+        ...(req.policy_overrides || {}),
+    }
+    const adjustedIncome = Math.max(
+        0,
+        (req.annual_income_gbp || 0) -
+            (req.pension_salary_sacrifice_gbp || 0) -
+            (req.other_pre_tax_deductions_gbp || 0),
+    )
+    const adjustedPartner = Math.max(0, req.partner_annual_income_gbp || 0)
+    const extension =
+        (req.pension_relief_at_source_gbp || 0) + (req.gift_aid_gbp || 0)
+
+    let primaryIncomeTax =
+        req.uk_nation_for_income_tax === "scotland"
+            ? estimateIncomeTaxScotland(adjustedIncome, p)
+            : estimateIncomeTaxWithReliefs(adjustedIncome, p, extension)
+    let primaryNI =
+        req.employment_type === "self_employed" || req.employment_type === "mixed"
+            ? estimateSelfEmployedNI(adjustedIncome)
+            : estimateNationalInsurance(adjustedIncome, p)
+    let partnerIncomeTax = estimateIncomeTaxWithReliefs(adjustedPartner, p, 0)
+    let partnerNI = estimateNationalInsurance(adjustedPartner, p)
+
+    let marriageCredit = 0
+    if (req.marriage_allowance_transfer && adjustedPartner > 0) {
+        const lower = Math.min(adjustedIncome, adjustedPartner)
+        const higher = Math.max(adjustedIncome, adjustedPartner)
+        if (lower <= p.personal_allowance && higher <= p.higher_rate_threshold) {
+            marriageCredit = Math.min(252, Math.max(primaryIncomeTax, partnerIncomeTax))
+            if (primaryIncomeTax >= partnerIncomeTax) {
+                primaryIncomeTax = round2(primaryIncomeTax - marriageCredit)
+            } else {
+                partnerIncomeTax = round2(partnerIncomeTax - marriageCredit)
+            }
+        }
+    }
+
+    const householdIncomeTax = round2(primaryIncomeTax + partnerIncomeTax)
+    const householdNI = round2(primaryNI + partnerNI)
+    const adjustedHousehold = adjustedIncome + adjustedPartner
+    const vatRatio = req.vatable_spend_ratio ?? 0.6
+    const vat = estimateVat(adjustedHousehold, householdIncomeTax, householdNI, vatRatio, p)
+
+    const postcodeData = req.postcode ? await lookupPostcode(req.postcode) : null
+    const inferredRegion = postcodeData?.region || ""
+    const inferredCouncil = req.council_name || postcodeData?.council_name || ""
+    const councilRegion = inferredRegion || req.region || "England"
+    const council =
+        req.council_tax_annual_override_gbp != null
+            ? round2(req.council_tax_annual_override_gbp)
+            : estimateCouncilTax(councilRegion, req.council_tax_band || "auto")
+
+    const savingsTax = estimateSavingsTax(adjustedIncome, req.savings_interest_gbp || 0)
+    const dividendTax = estimateDividendTax(adjustedIncome, req.dividend_income_gbp || 0)
+    const studentLoan = estimateStudentLoan(adjustedIncome, req.student_loan_plan || "none")
+
+    const total = round2(
+        householdIncomeTax + householdNI + vat + council + savingsTax + dividendTax + studentLoan,
+    )
+    const gross = (req.annual_income_gbp || 0) + (req.partner_annual_income_gbp || 0)
+    const effective = gross ? total / gross : 0
+    const takeHome = round2(gross - total)
+
+    const vatLow = Math.max(0, vatRatio - 0.1)
+    const vatHigh = Math.min(1, vatRatio + 0.1)
+    const vatEstLow = estimateVat(adjustedHousehold, householdIncomeTax, householdNI, vatLow, p)
+    const vatEstHigh = estimateVat(adjustedHousehold, householdIncomeTax, householdNI, vatHigh, p)
+    const councilLow =
+        req.council_tax_annual_override_gbp != null ? council : round2(council * 0.9)
+    const councilHigh =
+        req.council_tax_annual_override_gbp != null ? council : round2(council * 1.1)
+
+    return {
+        annual_income_gbp: round2(req.annual_income_gbp || 0),
+        income_tax_gbp: householdIncomeTax,
+        national_insurance_gbp: householdNI,
+        vat_estimate_gbp: vat,
+        council_tax_estimate_gbp: council,
+        student_loan_repayment_gbp: studentLoan,
+        savings_tax_gbp: savingsTax,
+        dividend_tax_gbp: dividendTax,
+        total_estimated_tax_gbp: total,
+        effective_tax_rate: effective,
+        assumptions: {
+            tax_year: req.tax_year || "2025-26",
+            vatable_spend_ratio: vatRatio,
+            vat_rate: p.vat_rate,
+            ni_main_rate: p.ni_main_rate,
+            ni_upper_rate: p.ni_upper_rate,
+            adjusted_income_gbp: round2(adjustedIncome),
+            adjusted_partner_income_gbp: round2(adjustedPartner),
+            pension_salary_sacrifice_gbp: req.pension_salary_sacrifice_gbp || 0,
+            pension_relief_at_source_gbp: req.pension_relief_at_source_gbp || 0,
+            gift_aid_gbp: req.gift_aid_gbp || 0,
+            other_pre_tax_deductions_gbp: req.other_pre_tax_deductions_gbp || 0,
+            council_tax_band: req.council_tax_band || "auto",
+            council_name: inferredCouncil,
+            postcode_lookup_region: inferredRegion,
+            council_tax_region_used: councilRegion,
+            uk_nation_for_income_tax: req.uk_nation_for_income_tax || "england_ni",
+            employment_type: req.employment_type || "employed",
+            student_loan_plan: req.student_loan_plan || "none",
+            policy_simulation_active: req.policy_overrides ? "yes" : "no",
+            marriage_allowance_credit_gbp: marriageCredit,
+        },
+        household_summary: {
+            household_income_gbp: round2(gross),
+            partner_annual_income_gbp: round2(req.partner_annual_income_gbp || 0),
+            household_adults: (req.partner_annual_income_gbp || 0) > 0 ? 2 : 1,
+            marriage_allowance_transfer: !!req.marriage_allowance_transfer,
+        },
+        take_home_gbp: takeHome,
+        uncertainty_range_gbp: {
+            low: round2(
+                householdIncomeTax +
+                    householdNI +
+                    vatEstLow +
+                    councilLow +
+                    savingsTax +
+                    dividendTax +
+                    studentLoan,
+            ),
+            high: round2(
+                householdIncomeTax +
+                    householdNI +
+                    vatEstHigh +
+                    councilHigh +
+                    savingsTax +
+                    dividendTax +
+                    studentLoan,
+            ),
+        },
+        historical_comparison: null,
+    }
+}
+
+async function localSpendingBreakdown(req) {
+    const tax = await localTaxEstimate(req)
+    const bundle = await ensureFrontendBundle()
+    const userShare =
+        tax.total_estimated_tax_gbp / 1_000_000 / bundle.total_uk_revenue_m_gbp
+    const services = bundle.services
+        .map((s) => {
+            const contribution = s.spending_amount_m_gbp * userShare * 1_000_000
+            return {
+                function_label: s.function_label,
+                spending_amount_m_gbp: round2(s.spending_amount_m_gbp),
+                user_contribution_gbp: round2(contribution),
+                share_of_user_tax_percent: round2(
+                    tax.total_estimated_tax_gbp
+                        ? (contribution / tax.total_estimated_tax_gbp) * 100
+                        : 0,
+                ),
+            }
+        })
+        .sort((a, b) => b.user_contribution_gbp - a.user_contribution_gbp)
+    const topN = req.top_n ?? 12
+    return {
+        total_uk_tax_revenue_m_gbp: bundle.total_uk_revenue_m_gbp,
+        user_total_tax_gbp: tax.total_estimated_tax_gbp,
+        user_share_of_total_revenue: userShare,
+        spending_year: bundle.meta.spending_year,
+        revenue_year: bundle.meta.revenue_year,
+        services: services.slice(0, topN),
+    }
+}
+
+async function localServicesImpact(req) {
+    const tax = await localTaxEstimate(req)
+    const bundle = await ensureFrontendBundle()
+    const userShare =
+        tax.total_estimated_tax_gbp / 1_000_000 / bundle.total_uk_revenue_m_gbp
+    const all = bundle.services
+        .map((s) => {
+            const contribution = s.spending_amount_m_gbp * userShare * 1_000_000
+            return {
+                function_label: s.function_label,
+                spending_amount_m_gbp: round2(s.spending_amount_m_gbp),
+                user_contribution_gbp: round2(contribution),
+                share_of_user_tax_percent: round2(
+                    tax.total_estimated_tax_gbp
+                        ? (contribution / tax.total_estimated_tax_gbp) * 100
+                        : 0,
+                ),
+            }
+        })
+        .sort((a, b) => b.user_contribution_gbp - a.user_contribution_gbp)
+    const page = req.page ?? 1
+    const pageSize = req.page_size ?? 20
+    const [items, totalItems] = paginate(all, page, pageSize)
+    return {
+        total_uk_tax_revenue_m_gbp: bundle.total_uk_revenue_m_gbp,
+        user_total_tax_gbp: tax.total_estimated_tax_gbp,
+        user_share_of_total_revenue: userShare,
+        spending_year: bundle.meta.spending_year,
+        revenue_year: bundle.meta.revenue_year,
+        page,
+        page_size: pageSize,
+        total_items: totalItems,
+        services: items,
+    }
+}
+
+async function localRegionalFlows(req) {
+    const bundle = await ensureFrontendBundle()
+    const regional = bundle.regional
+    const page = req.page ?? 1
+    const pageSize = req.page_size ?? 50
+    const [paged, totalItems] = paginate(regional.flows, page, pageSize)
+    const official = regional.official_borrowing || {}
+    return {
+        year: regional.year,
+        page,
+        page_size: pageSize,
+        total_items: totalItems,
+        official_borrowing_b_gbp: official.amount_b_gbp ?? null,
+        official_borrowing_year_label: official.reference_period ?? null,
+        official_borrowing_release_period: official.release_period ?? null,
+        official_borrowing_reference_period: official.reference_period ?? null,
+        borrowing_method: official.amount_b_gbp
+            ? "official_psnb_ex"
+            : "implied_gap_from_regional_dataset",
+        balances: regional.balances,
+        flows: paged,
+    }
+}
+
+function rowsToCsv(rows, fieldnames) {
+    const lines = [fieldnames.join(",")]
+    rows.forEach((r) => {
+        lines.push(
+            fieldnames
+                .map((k) => {
+                    const v = r[k] ?? ""
+                    const s = String(v)
+                    return s.includes(",") ? `"${s.replaceAll('"', '""')}"` : s
+                })
+                .join(","),
+        )
+    })
+    return `${lines.join("\n")}\n`
+}
+
+async function localJournalistExport(req) {
+    const tax = await localTaxEstimate(req)
+    const breakdown = await localSpendingBreakdown({ ...req, top_n: 12 })
+    const services = await localServicesImpact({ ...req, page: 1, page_size: 100 })
+    const regional = await localRegionalFlows({ year: "2022 to 2023", page: 1, page_size: 200 })
+    return {
+        exported_at_utc: new Date().toISOString(),
+        tax,
+        spending_breakdown: breakdown,
+        services_impact: services,
+        regional_flows: regional,
+        services_csv: rowsToCsv(services.services, [
+            "function_label",
+            "spending_amount_m_gbp",
+            "user_contribution_gbp",
+            "share_of_user_tax_percent",
+        ]),
+        regional_balances_csv: rowsToCsv(regional.balances, [
+            "geography_code",
+            "geography_name",
+            "contribution_m_gbp",
+            "spending_m_gbp",
+            "net_balance_m_gbp",
+        ]),
+    }
+}
+
+async function localPost(path, body) {
+    switch (path) {
+        case "/tax/estimate":
+            return localTaxEstimate(body || {})
+        case "/spending/breakdown":
+            return localSpendingBreakdown(body || {})
+        case "/services/impact":
+            return localServicesImpact(body || {})
+        case "/regional/flows":
+            return localRegionalFlows(body || {})
+        case "/journalist/export":
+            return localJournalistExport(body || {})
+        default:
+            throw new Error(`Unsupported local endpoint: ${path}`)
+    }
 }
 
 function renderMetrics(tax, breakdown) {
@@ -647,27 +1175,39 @@ function renderServiceCards(payload) {
 
 function renderRegionalMap(balances, mode = "total") {
     const isPerCapita = mode === "per_capita"
+    const populationByRegion =
+        state.frontendBundle?.regional?.population_by_region || {}
     const values = balances.map((b) => {
         if (!isPerCapita) return b.net_balance_m_gbp
-        const pop = REGION_POPULATION_ITL1[b.geography_name]
-        if (!pop) return 0
+        const pop = Number(populationByRegion[b.geography_name])
+        if (!Number.isFinite(pop) || pop <= 0) return null
         return (b.net_balance_m_gbp * 1_000_000) / pop
     })
-    const max = Math.max(...values.map((v) => Math.abs(v)), 1)
+    const max = Math.max(
+        ...values.map((v) => (Number.isFinite(v) ? Math.abs(v) : 0)),
+        1,
+    )
     const root = document.getElementById("uk-map")
     root.innerHTML = balances
         .map((b, idx) => {
             const displayValue = values[idx]
-            const ratio = Math.abs(displayValue) / max
+            const hasValue = Number.isFinite(displayValue)
+            const ratio = hasValue ? Math.abs(displayValue) / max : 0
             const color =
-                displayValue >= 0
+                !hasValue
+                    ? "rgba(100, 116, 139, 0.25)"
+                    : displayValue >= 0
                     ? `rgba(22, 101, 52, ${0.35 + ratio * 0.55})`
                     : `rgba(153, 27, 27, ${0.35 + ratio * 0.55})`
             const valueText = isPerCapita
-                ? `${displayValue >= 0 ? "+" : ""}${money(displayValue)} / resident`
+                ? hasValue
+                    ? `${displayValue >= 0 ? "+" : ""}${money(displayValue)} / resident`
+                    : "n/a"
                 : `${b.net_balance_m_gbp >= 0 ? "+" : ""}£${(b.net_balance_m_gbp / 1000).toFixed(1)}bn`
             const title = isPerCapita
-                ? "Net balance per resident (GBP)"
+                ? hasValue
+                    ? "Net balance per resident (GBP)"
+                    : "Missing sourced population value"
                 : "Total net balance (million GBP)"
             return `
         <div class="tile" style="background:${color}" aria-label="${b.geography_name}: ${valueText}">
@@ -1026,7 +1566,7 @@ function syncShareUI() {
     updateAddressBar()
     const text = "I mapped my UK tax footprint with Where Your Taxes Go."
     const x = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
-    const li = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+    const li = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`${text} ${url}`)}`
     document.getElementById("share-x").href = x
     document.getElementById("share-linkedin").href = li
 }

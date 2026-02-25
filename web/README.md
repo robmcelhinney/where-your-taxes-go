@@ -2,12 +2,12 @@
 
 Sleek single-page frontend for Phase 7 UI.
 
-## Run
+## Run (Static-First)
 
-1. Start API:
+1. Build frontend data bundle:
 
 ```bash
-uv run uvicorn api.main:app --reload
+python3 data/scripts/build_frontend_bundle.py
 ```
 
 2. Serve web folder:
@@ -21,14 +21,11 @@ python3 -m http.server 4173
 
 - http://127.0.0.1:4173
 
-The page calls API endpoints:
+By default the page runs in local mode (`API base URL = local`) and computes everything client-side from `web/data/frontend_bundle.json`.
 
-- `POST /tax/estimate`
-- `POST /spending/breakdown`
-- `POST /services/impact`
-- `POST /regional/flows`
-- `POST /journalist/export`
-- `GET /public/meta`
+Optional backend mode:
+- Start API: `uv run uvicorn api.main:app --reload`
+- Set API base URL in the UI to `http://127.0.0.1:8000`
 
 UI includes:
 - methodology and data attribution sections

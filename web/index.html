@@ -127,11 +127,11 @@
                         </select>
                     </label>
                     <label>
-                        API base URL
+                        API base URL (`local` or http URL)
                         <input
                             type="text"
                             id="api-base"
-                            value="http://127.0.0.1:8000"
+                            value="local"
                         />
                     </label>
                     <details class="assumption-dropdown">
@@ -505,25 +505,6 @@
                 <div class="borrowing-bars" id="borrowing-bars"></div>
             </section>
 
-            <section class="panel" id="share-panel">
-                <h2>Share & Export</h2>
-                <div class="share-row">
-                    <button id="copy-share-link" type="button">
-                        Copy shareable result link
-                    </button>
-                    <a id="share-x" target="_blank" rel="noopener"
-                        >Share on X</a
-                    >
-                    <a id="share-linkedin" target="_blank" rel="noopener"
-                        >Share on LinkedIn</a
-                    >
-                </div>
-                <p class="muted">
-                    Share links encode your current assumptions in URL
-                    parameters.
-                </p>
-            </section>
-
             <section class="panel">
                 <div class="split-head">
                     <h2>Service Impact Cards</h2>
@@ -688,6 +669,25 @@
                         >Open GitHub Issue</a
                     >
                 </div>
+            </section>
+
+            <section class="panel" id="share-panel">
+                <h2>Share & Export</h2>
+                <div class="share-row">
+                    <button id="copy-share-link" type="button">
+                        Copy shareable result link
+                    </button>
+                    <a id="share-x" target="_blank" rel="noopener"
+                        >Share on X</a
+                    >
+                    <a id="share-linkedin" target="_blank" rel="noopener"
+                        >Share on LinkedIn</a
+                    >
+                </div>
+                <p class="muted">
+                    Share links encode your current assumptions in URL
+                    parameters.
+                </p>
             </section>
         </main>
 

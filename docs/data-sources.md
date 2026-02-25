@@ -18,6 +18,7 @@ Current extracted snapshots completed:
 - `data/processed/ons_regional_expenditure_fye2023.csv` (ONS expenditure, normalized with geography codes)
 - `data/processed/council_to_region_2024.csv` (LAD-to-region mapping)
 - `data/processed/official_uk_borrowing.csv` (ONS PSNB ex, official borrowing benchmark)
+- `data/processed/ons_itl1_population_mid2022.csv` (official UK regional populations for per-capita map normalization)
 
 ## HM Treasury (National Spending)
 
@@ -83,6 +84,10 @@ Council to region mapping source:
   - https://geoportal.statistics.gov.uk/datasets/ons::local-authority-district-to-region-april-2024-lookup-in-united-kingdom/about
 - CSV download:
   - https://hub.arcgis.com/api/v3/datasets/3959874c514b470e9dd160acdc00c97a_0/downloads/data?format=csv&spatialRefId=4326&where=1%3D1
+
+Regional population source (for ITL1 per-capita normalization):
+- HM Treasury Country and regional analysis 2023 (Annex table: "Population numbers by country and region, 2022"):
+  - https://www.gov.uk/government/publications/country-and-regional-analysis-2023/country-and-regional-analysis-november-2023
 
 ## Aggregation Level Decision (Phase 1)
 
