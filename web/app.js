@@ -1,5 +1,5 @@
 const state = {
-    apiBase: "http://127.0.0.1:8000",
+    apiBase: "local",
     page: 1,
     pageSize: 9,
     totalItems: 0,
@@ -49,17 +49,17 @@ const DEFAULT_FORM_STATE = {
 
 const palette = [
     "#0f766e",
+    "#14b8a6",
+    "#2563eb",
+    "#0ea5e9",
+    "#f97316",
+    "#fb7185",
     "#d97706",
-    "#b45309",
-    "#3f6212",
-    "#0c4a6e",
-    "#be123c",
-    "#334155",
-    "#7c2d12",
-    "#166534",
-    "#7c3aed",
     "#0e7490",
-    "#92400e",
+    "#ef4444",
+    "#7c3aed",
+    "#334155",
+    "#0891b2",
 ]
 
 const COUNCIL_TAX_AVERAGE_BY_REGION = {
@@ -865,20 +865,29 @@ function renderTakeHomeView(tax, payload) {
         ["Gross income", gross, "#0f766e"],
         ["Income tax", -tax.income_tax_gbp, "#be123c"],
         ["National insurance", -tax.national_insurance_gbp, "#b45309"],
-        ["Student loan", -(tax.student_loan_repayment_gbp || 0), "#7c2d12"],
-        [
+    ]
+    if (payload.student_loan_plan && payload.student_loan_plan !== "none") {
+        rows.push(["Student loan", -(tax.student_loan_repayment_gbp || 0), "#7c2d12"])
+    }
+    if (
+        Number(payload.savings_interest_gbp || 0) > 0 ||
+        Number(payload.dividend_income_gbp || 0) > 0
+    ) {
+        rows.push([
             "Savings/dividend tax",
             -((tax.savings_tax_gbp || 0) + (tax.dividend_tax_gbp || 0)),
             "#7c3aed",
-        ],
-        ["VAT estimate", -tax.vat_estimate_gbp, "#0369a1"],
-        ["Council tax", -tax.council_tax_estimate_gbp, "#334155"],
-        [
-            "Estimated take-home",
-            tax.take_home_gbp || gross - tax.total_estimated_tax_gbp,
-            "#166534",
-        ],
-    ]
+        ])
+    }
+    if (Number(payload.vatable_spend_ratio || 0) > 0) {
+        rows.push(["VAT estimate", -tax.vat_estimate_gbp, "#0369a1"])
+    }
+    rows.push(["Council tax", -tax.council_tax_estimate_gbp, "#334155"])
+    rows.push([
+        "Estimated take-home",
+        tax.take_home_gbp || gross - tax.total_estimated_tax_gbp,
+        "#166534",
+    ])
     const max = Math.max(...rows.map((r) => Math.abs(r[1])), 1)
     const root = document.getElementById("take-home-view")
     root.innerHTML = rows
@@ -942,24 +951,35 @@ function renderDataVintage(tax, breakdown, flowsPayload) {
 }
 
 function renderPie(services, userTotalTax) {
-    const top = services.slice(0, 15)
-    const totalServicePct = services.reduce(
+    const minSlicePct = 3.5
+    const maxSlices = 8
+    const sorted = [...services].sort(
+        (a, b) => b.share_of_user_tax_percent - a.share_of_user_tax_percent,
+    )
+    const totalServicePct = sorted.reduce(
         (a, s) => a + s.share_of_user_tax_percent,
         0,
     )
-    const topServicePct = top.reduce(
-        (a, s) => a + s.share_of_user_tax_percent,
-        0,
-    )
-    const otherServicesPct = Math.max(0, totalServicePct - topServicePct)
     const unattributedPct = Math.max(0, 100 - totalServicePct)
 
-    const all = top.map((s) => ({ ...s }))
+    const all = []
+    let otherServicesPct = 0
+    let otherServicesAmount = 0
+    sorted.forEach((s) => {
+        const pct = Number(s.share_of_user_tax_percent || 0)
+        if (pct >= minSlicePct && all.length < maxSlices) {
+            all.push({ ...s })
+            return
+        }
+        otherServicesPct += pct
+        otherServicesAmount += Number(s.user_contribution_gbp || 0)
+    })
     const everythingElsePct = Math.max(0, otherServicesPct + unattributedPct)
     if (everythingElsePct > 0.01) {
         all.push({
-            function_label: "Everything else",
-            user_contribution_gbp: (userTotalTax * everythingElsePct) / 100,
+            function_label: "Other services",
+            user_contribution_gbp:
+                otherServicesAmount + (userTotalTax * unattributedPct) / 100,
             share_of_user_tax_percent: everythingElsePct,
             _other_services_pct: otherServicesPct,
             _unattributed_pct: unattributedPct,
@@ -970,19 +990,26 @@ function renderPie(services, userTotalTax) {
     pie.innerHTML = `<svg viewBox="0 0 160 160" class="pie-svg"></svg><div id="pie-tip" class="pie-tip"></div>`
     const svg = pie.querySelector("svg")
     const tip = document.getElementById("pie-tip")
+    const showLeaderLabels = (pie.clientWidth || 0) >= 430
 
     let startAngle = -Math.PI / 2
     const cx = 80
     const cy = 80
-    const r = 78
+    const outerR = 54
+    const innerR = 31
+    const labelCandidates = []
     all.forEach((s, i) => {
         const share = s.share_of_user_tax_percent / 100
         const sweep = Math.max(share * Math.PI * 2, 0.0001)
         const endAngle = startAngle + sweep
-        const x1 = cx + r * Math.cos(startAngle)
-        const y1 = cy + r * Math.sin(startAngle)
-        const x2 = cx + r * Math.cos(endAngle)
-        const y2 = cy + r * Math.sin(endAngle)
+        const x1o = cx + outerR * Math.cos(startAngle)
+        const y1o = cy + outerR * Math.sin(startAngle)
+        const x2o = cx + outerR * Math.cos(endAngle)
+        const y2o = cy + outerR * Math.sin(endAngle)
+        const x2i = cx + innerR * Math.cos(endAngle)
+        const y2i = cy + innerR * Math.sin(endAngle)
+        const x1i = cx + innerR * Math.cos(startAngle)
+        const y1i = cy + innerR * Math.sin(startAngle)
         const largeArc = sweep > Math.PI ? 1 : 0
         const path = document.createElementNS(
             "http://www.w3.org/2000/svg",
@@ -990,19 +1017,19 @@ function renderPie(services, userTotalTax) {
         )
         path.setAttribute(
             "d",
-            `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`,
+            `M ${x1o} ${y1o} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2o} ${y2o} L ${x2i} ${y2i} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x1i} ${y1i} Z`,
         )
         path.setAttribute("fill", palette[i % palette.length])
         path.setAttribute("stroke", "#ffffff")
         path.setAttribute("stroke-width", "1")
         path.style.cursor = "pointer"
 
-        const { code, name } = cleanFunctionLabel(s.function_label)
-        const label = code ? `${name} (COFOG ${code})` : name
+        const { name } = cleanFunctionLabel(s.function_label)
+        const label = name
         const pct = s.share_of_user_tax_percent.toFixed(1)
-        const isEverythingElse = s.function_label === "Everything else"
+        const isEverythingElse = s.function_label === "Other services"
         const breakdown = isEverythingElse
-            ? ` • remaining services ${(s._other_services_pct || 0).toFixed(1)}%, unallocated ${(s._unattributed_pct || 0).toFixed(1)}%`
+            ? ` • small services ${(s._other_services_pct || 0).toFixed(1)}%, unattributed ${(s._unattributed_pct || 0).toFixed(1)}%`
             : ""
         path.addEventListener("mousemove", (e) => {
             tip.style.display = "block"
@@ -1014,26 +1041,103 @@ function renderPie(services, userTotalTax) {
             tip.style.display = "none"
         })
         svg.appendChild(path)
+        const midAngle = startAngle + sweep / 2
+        if (!isEverythingElse && Number(pct) >= 8) {
+            labelCandidates.push({
+                name,
+                pct,
+                angle: midAngle,
+                x: cx + Math.cos(midAngle) * outerR,
+                y: cy + Math.sin(midAngle) * outerR,
+            })
+        }
         startAngle = endAngle
     })
 
-    const legend = document.getElementById("pie-legend")
-    legend.innerHTML = all
-        .map((s, i) => {
-            const { code, name } = cleanFunctionLabel(s.function_label)
-            const extra = code ? ` (COFOG ${code})` : ""
-            const pct = s.share_of_user_tax_percent.toFixed(1)
-            const isEverythingElse = s.function_label === "Everything else"
-            const breakdown = isEverythingElse
-                ? ` (remaining services ${(s._other_services_pct || 0).toFixed(1)}% + unallocated ${(s._unattributed_pct || 0).toFixed(1)}%)`
-                : ""
-            return `
-        <li>
-          <span class="swatch" style="background:${palette[i % palette.length]}"></span>
-          <span>${name}${extra}: ${pct}% of your total tax${breakdown}</span>
-        </li>`
+    if (showLeaderLabels) {
+        const sides = {
+            right: labelCandidates
+                .filter((c) => c.x >= cx)
+                .sort((a, b) => a.y - b.y),
+            left: labelCandidates
+                .filter((c) => c.x < cx)
+                .sort((a, b) => a.y - b.y),
+        }
+        const minGap = 7
+        ;["left", "right"].forEach((side) => {
+            const items = sides[side]
+            let prevY = 26
+            items.forEach((item) => {
+                const elbowR = outerR + 8
+                const elbowX = cx + Math.cos(item.angle) * elbowR
+                const elbowYRaw = cy + Math.sin(item.angle) * elbowR
+                const elbowY = Math.max(prevY + minGap, Math.min(134, elbowYRaw))
+                prevY = elbowY
+                const labelX = side === "right" ? 148 : 12
+                const labelAnchor = side === "right" ? "start" : "end"
+                const hBend = side === "right" ? labelX - 2 : labelX + 2
+                const line = document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "path",
+                )
+                line.setAttribute(
+                    "d",
+                    `M ${item.x} ${item.y} L ${elbowX} ${elbowY} L ${hBend} ${elbowY}`,
+                )
+                line.setAttribute("class", "pie-leader")
+                svg.appendChild(line)
+
+                const txt = document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "text",
+                )
+                txt.setAttribute("x", `${labelX}`)
+                txt.setAttribute("y", `${elbowY - 0.6}`)
+                txt.setAttribute("text-anchor", labelAnchor)
+                txt.setAttribute("class", "pie-leader-label")
+                txt.textContent = `${item.name}: ${item.pct}%`
+                svg.appendChild(txt)
+            })
         })
-        .join("")
+    }
+
+    const hole = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+    hole.setAttribute("cx", `${cx}`)
+    hole.setAttribute("cy", `${cy}`)
+    hole.setAttribute("r", `${innerR - 1}`)
+    hole.setAttribute("fill", "var(--surface)")
+    hole.setAttribute("stroke", "var(--line)")
+    hole.setAttribute("stroke-width", "1")
+    svg.appendChild(hole)
+
+    const centerValue = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text",
+    )
+    centerValue.setAttribute("x", `${cx}`)
+    centerValue.setAttribute("y", `${cy - 2}`)
+    centerValue.setAttribute("text-anchor", "middle")
+    centerValue.setAttribute("font-size", "8")
+    centerValue.setAttribute("font-weight", "900")
+    centerValue.setAttribute("fill", "var(--text)")
+    centerValue.textContent = money(userTotalTax)
+    svg.appendChild(centerValue)
+
+    const centerLabel = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text",
+    )
+    centerLabel.setAttribute("x", `${cx}`)
+    centerLabel.setAttribute("y", `${cy + 13}`)
+    centerLabel.setAttribute("text-anchor", "middle")
+    centerLabel.setAttribute("font-size", "4.8")
+    centerLabel.setAttribute("font-weight", "600")
+    centerLabel.setAttribute("fill", "var(--text-muted)")
+    centerLabel.textContent = "total annual tax"
+    svg.appendChild(centerLabel)
+
+    const legend = document.getElementById("pie-legend")
+    if (legend) legend.innerHTML = ""
 }
 
 function renderServiceCards(payload) {
@@ -1163,7 +1267,7 @@ function renderServiceCards(payload) {
               <div class="amount">${money(s.user_contribution_gbp)}</div>
               <div class="meta">
                 <div><strong>${s.share_of_user_tax_percent.toFixed(2)}%</strong> of your total tax</div>
-                <div><strong>${s.spending_amount_m_gbp.toFixed(0)}m GBP</strong> national spend</div>
+                <div><strong>${compactMillionsGBP(s.spending_amount_m_gbp)}</strong> national spend</div>
               </div>
             </article>`
                 })
@@ -1187,36 +1291,139 @@ function renderRegionalMap(balances, mode = "total") {
         ...values.map((v) => (Number.isFinite(v) ? Math.abs(v) : 0)),
         1,
     )
+    const valueByRegion = new Map(
+        balances.map((b, idx) => [b.geography_name, values[idx]]),
+    )
+    const layout = {
+        Scotland: [2, 0],
+        "North West": [2, 2],
+        "North East": [3, 2],
+        "Yorkshire and The Humber": [3, 3],
+        "East Midlands": [3, 4],
+        "West Midlands": [2, 4],
+        Wales: [1, 4],
+        "East of England": [4, 4],
+        London: [4, 5],
+        "South East": [4, 6],
+        "South West": [2, 6],
+        "Northern Ireland": [0, 3],
+    }
     const root = document.getElementById("uk-map")
-    root.innerHTML = balances
-        .map((b, idx) => {
-            const displayValue = values[idx]
-            const hasValue = Number.isFinite(displayValue)
-            const ratio = hasValue ? Math.abs(displayValue) / max : 0
-            const color =
-                !hasValue
-                    ? "rgba(100, 116, 139, 0.25)"
-                    : displayValue >= 0
-                    ? `rgba(22, 101, 52, ${0.35 + ratio * 0.55})`
-                    : `rgba(153, 27, 27, ${0.35 + ratio * 0.55})`
-            const valueText = isPerCapita
-                ? hasValue
-                    ? `${displayValue >= 0 ? "+" : ""}${money(displayValue)} / resident`
-                    : "n/a"
-                : `${b.net_balance_m_gbp >= 0 ? "+" : ""}£${(b.net_balance_m_gbp / 1000).toFixed(1)}bn`
-            const title = isPerCapita
-                ? hasValue
-                    ? "Net balance per resident (GBP)"
-                    : "Missing sourced population value"
-                : "Total net balance (million GBP)"
-            return `
-        <div class="tile" style="background:${color}" aria-label="${b.geography_name}: ${valueText}">
-          <div class="name">${b.geography_name}</div>
-          <div class="net" title="${title}">${valueText}</div>
-        </div>
-      `
+    const isNarrow = (root.clientWidth || 0) < 560
+    const labelLinesByRegion = isNarrow
+        ? {
+              "Yorkshire and The Humber": ["Yorks", "& Humber"],
+              "East of England": ["East of", "England"],
+              "Northern Ireland": ["N. Ireland"],
+              "West Midlands": ["W. Midlands"],
+              "East Midlands": ["E. Midlands"],
+              "South West": ["South West"],
+              "South East": ["South East"],
+              "North West": ["North West"],
+              "North East": ["North East"],
+          }
+        : {
+              "Yorkshire and The Humber": ["Yorkshire", "& Humber"],
+              "East of England": ["East of", "England"],
+              "Northern Ireland": ["N. Ireland"],
+              "West Midlands": ["West", "Midlands"],
+              "East Midlands": ["East", "Midlands"],
+              "South West": ["South West"],
+              "South East": ["South East"],
+              "North West": ["North West"],
+              "North East": ["North East"],
+          }
+    const dx = isNarrow ? 68 : 112
+    const dy = isNarrow ? 66 : 92
+    const hexR = isNarrow ? 32 : 42
+    const padX = isNarrow ? 38 : 82
+    const padY = isNarrow ? 26 : 42
+    const width = isNarrow ? 430 : 760
+    const height = isNarrow ? 500 : 655
+    root.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="UK regional redistribution hex cartogram"></svg>`
+    const svg = root.querySelector("svg")
+    const ns = "http://www.w3.org/2000/svg"
+    const defs = document.createElementNS(ns, "defs")
+    const shadow = document.createElementNS(ns, "filter")
+    shadow.setAttribute("id", "hexShadow")
+    shadow.setAttribute("x", "-20%")
+    shadow.setAttribute("y", "-20%")
+    shadow.setAttribute("width", "140%")
+    shadow.setAttribute("height", "140%")
+    const blur = document.createElementNS(ns, "feDropShadow")
+    blur.setAttribute("dx", "0")
+    blur.setAttribute("dy", "1.2")
+    blur.setAttribute("stdDeviation", "1.2")
+    blur.setAttribute("flood-color", "rgba(15,23,42,0.22)")
+    shadow.appendChild(blur)
+    defs.appendChild(shadow)
+    svg.appendChild(defs)
+
+    Object.entries(layout).forEach(([region, [col, row]]) => {
+        const balance = balances.find((b) => b.geography_name === region)
+        if (!balance) return
+        const displayValue = valueByRegion.get(region)
+        const hasValue = Number.isFinite(displayValue)
+        const ratio = hasValue ? Math.abs(displayValue) / max : 0
+        const color =
+            !hasValue
+                ? "rgba(100, 116, 139, 0.25)"
+                : displayValue >= 0
+                  ? `rgba(13, 148, 136, ${0.34 + ratio * 0.56})`
+                  : `rgba(244, 63, 94, ${0.32 + ratio * 0.56})`
+        const valueText = isPerCapita
+            ? hasValue
+                ? `${displayValue >= 0 ? "+" : ""}${money(displayValue)}`
+                : "n/a"
+            : `${balance.net_balance_m_gbp >= 0 ? "+" : ""}£${(balance.net_balance_m_gbp / 1000).toFixed(1)}bn`
+        const cx = padX + col * dx + (row % 2 ? dx / 2 : 0)
+        const cy = padY + row * dy
+        const points = Array.from({ length: 6 })
+            .map((_, i) => {
+                const a = (Math.PI / 180) * (60 * i - 30)
+                return `${(cx + hexR * Math.cos(a)).toFixed(1)},${(cy + hexR * Math.sin(a)).toFixed(1)}`
+            })
+            .join(" ")
+
+        const g = document.createElementNS(ns, "g")
+        g.setAttribute("class", "hex-node")
+        const hex = document.createElementNS(ns, "polygon")
+        hex.setAttribute("points", points)
+        hex.setAttribute("fill", color)
+        hex.setAttribute("stroke", "rgba(255,255,255,0.86)")
+        hex.setAttribute("stroke-width", "1.4")
+        hex.setAttribute("filter", "url(#hexShadow)")
+        g.appendChild(hex)
+
+        const lines = labelLinesByRegion[region] || [region]
+        const name = document.createElementNS(ns, "text")
+        name.setAttribute("x", `${cx}`)
+        name.setAttribute("text-anchor", "middle")
+        name.setAttribute("class", "hex-label")
+        const nameStartY = lines.length > 1 ? cy - (isNarrow ? 10 : 12) : cy - (isNarrow ? 6 : 7)
+        lines.forEach((line, idx) => {
+            const t = document.createElementNS(ns, "tspan")
+            t.setAttribute("x", `${cx}`)
+            t.setAttribute("y", `${nameStartY + idx * (isNarrow ? 10 : 11)}`)
+            t.textContent = line
+            name.appendChild(t)
         })
-        .join("")
+        g.appendChild(name)
+
+        const val = document.createElementNS(ns, "text")
+        val.setAttribute("x", `${cx}`)
+        val.setAttribute("y", `${cy + (isNarrow ? 14 : 18)}`)
+        val.setAttribute("text-anchor", "middle")
+        val.setAttribute("class", "hex-value")
+        val.textContent =
+            isPerCapita && hasValue ? `${valueText}/res` : valueText
+        g.appendChild(val)
+
+        const title = document.createElementNS(ns, "title")
+        title.textContent = `${region}: ${isPerCapita ? `${valueText} per resident` : valueText}`
+        g.appendChild(title)
+        svg.appendChild(g)
+    })
 }
 
 function renderBorrowingContext(tax, flowsPayload) {
@@ -1326,7 +1533,8 @@ function renderSankey(flows, balances) {
         .sort((a, b) => a.net_balance_m_gbp - b.net_balance_m_gbp)
 
     const width = Math.max(320, svg.clientWidth || 900)
-    const h = 420
+    const isNarrow = width < 560
+    const h = isNarrow ? 500 : 420
     const donorStep = h / (donors.length + 1)
     const recipStep = h / (recips.length + 1)
 
@@ -1342,38 +1550,84 @@ function renderSankey(flows, balances) {
     const sankeyBg = css.getPropertyValue("--surface").trim() || "#ffffff"
     const sankeyText = css.getPropertyValue("--text").trim() || "#1f2937"
     const leftLabelX = Math.max(8, width * 0.02)
-    const leftFlowX = Math.max(52, width * 0.14)
-    const rightFlowX = Math.max(leftFlowX + 120, width * 0.82)
-    const rightLabelX = width - 10
-    const c1 = width * 0.34
-    const c2 = width * 0.62
-    const labelFont = width < 560 ? "11" : "12"
+    const leftFlowX = Math.max(52, width * (isNarrow ? 0.19 : 0.14))
+    const rightFlowX = Math.max(
+        leftFlowX + 120,
+        width * (isNarrow ? 0.67 : 0.82),
+    )
+    const rightLabelX = width - (isNarrow ? 4 : 10)
+    const c1 = width * (isNarrow ? 0.36 : 0.34)
+    const c2 = width * (isNarrow ? 0.52 : 0.62)
+    const labelFont = isNarrow ? "10" : "12"
+    const shortRegionName = (name) => {
+        if (!isNarrow) return name
+        const map = {
+            "Yorkshire and The Humber": "Yorks & Humber",
+            "Northern Ireland": "N. Ireland",
+            "East of England": "East England",
+            "West Midlands": "W. Midlands",
+            "East Midlands": "E. Midlands",
+        }
+        return map[name] || name
+    }
     svg.innerHTML = ""
     svg.setAttribute("viewBox", `0 0 ${width} ${h}`)
     const ns = "http://www.w3.org/2000/svg"
+
+    const regionColor = new Map()
+    balances.forEach((b, i) => {
+        regionColor.set(b.geography_name, palette[i % palette.length])
+    })
+
     const bg = document.createElementNS(ns, "rect")
     bg.setAttribute("x", "0")
     bg.setAttribute("y", "0")
     bg.setAttribute("width", `${width}`)
-    bg.setAttribute("height", "420")
+    bg.setAttribute("height", `${h}`)
     bg.setAttribute("fill", sankeyBg)
     svg.appendChild(bg)
+
+    const defs = document.createElementNS(ns, "defs")
+    svg.appendChild(defs)
+
+    const nodeBarW = width < 560 ? 10 : 13
+    const nodeBarH = width < 560 ? 11 : 14
 
     const nodeTextEls = new Map()
     donors.forEach((d) => {
         const y = donorY.get(d.geography_name) || 0
+        const node = document.createElementNS(ns, "rect")
+        node.setAttribute("x", `${leftFlowX - nodeBarW / 2}`)
+        node.setAttribute("y", `${y - nodeBarH / 2}`)
+        node.setAttribute("width", `${nodeBarW}`)
+        node.setAttribute("height", `${nodeBarH}`)
+        node.setAttribute("rx", "4")
+        node.setAttribute("fill", regionColor.get(d.geography_name) || "#64748b")
+        node.setAttribute("opacity", "0.95")
+        svg.appendChild(node)
+
         const text = document.createElementNS(ns, "text")
         text.setAttribute("x", `${leftLabelX}`)
         text.setAttribute("y", `${y + 4}`)
         text.setAttribute("font-size", labelFont)
         text.setAttribute("font-weight", "700")
         text.setAttribute("fill", sankeyText)
-        text.textContent = d.geography_name
+        text.textContent = shortRegionName(d.geography_name)
         svg.appendChild(text)
         nodeTextEls.set(d.geography_name, text)
     })
     recips.forEach((r) => {
         const y = recipY.get(r.geography_name) || 0
+        const node = document.createElementNS(ns, "rect")
+        node.setAttribute("x", `${rightFlowX - nodeBarW / 2}`)
+        node.setAttribute("y", `${y - nodeBarH / 2}`)
+        node.setAttribute("width", `${nodeBarW}`)
+        node.setAttribute("height", `${nodeBarH}`)
+        node.setAttribute("rx", "4")
+        node.setAttribute("fill", regionColor.get(r.geography_name) || "#64748b")
+        node.setAttribute("opacity", "0.95")
+        svg.appendChild(node)
+
         const text = document.createElementNS(ns, "text")
         text.setAttribute("x", `${rightLabelX}`)
         text.setAttribute("y", `${y + 4}`)
@@ -1381,7 +1635,7 @@ function renderSankey(flows, balances) {
         text.setAttribute("font-weight", "700")
         text.setAttribute("text-anchor", "end")
         text.setAttribute("fill", sankeyText)
-        text.textContent = r.geography_name
+        text.textContent = shortRegionName(r.geography_name)
         svg.appendChild(text)
         nodeTextEls.set(r.geography_name, text)
     })
@@ -1391,17 +1645,38 @@ function renderSankey(flows, balances) {
         const y1 = donorY.get(f.origin_region)
         const y2 = recipY.get(f.destination_region)
         if (!y1 || !y2) return
-        const width = Math.max(1.25, 0.6 + (f.value_m_gbp / maxFlow) * 14)
-        const c = palette[i % palette.length]
+        const width = Math.max(
+            isNarrow ? 0.9 : 1.25,
+            0.5 + (f.value_m_gbp / maxFlow) * (isNarrow ? 9 : 14),
+        )
+        const cFrom = regionColor.get(f.origin_region) || palette[i % palette.length]
+        const cTo =
+            regionColor.get(f.destination_region) || palette[(i + 4) % palette.length]
+        const gradId = `flow-${i}`
+        const grad = document.createElementNS(ns, "linearGradient")
+        grad.setAttribute("id", gradId)
+        grad.setAttribute("x1", `${leftFlowX}`)
+        grad.setAttribute("y1", `${y1}`)
+        grad.setAttribute("x2", `${rightFlowX}`)
+        grad.setAttribute("y2", `${y2}`)
+        const stop1 = document.createElementNS(ns, "stop")
+        stop1.setAttribute("offset", "0%")
+        stop1.setAttribute("stop-color", cFrom)
+        const stop2 = document.createElementNS(ns, "stop")
+        stop2.setAttribute("offset", "100%")
+        stop2.setAttribute("stop-color", cTo)
+        grad.appendChild(stop1)
+        grad.appendChild(stop2)
+        defs.appendChild(grad)
         const path = document.createElementNS(ns, "path")
         path.setAttribute(
             "d",
             `M${leftFlowX},${y1} C${c1},${y1} ${c2},${y2} ${rightFlowX},${y2}`,
         )
         path.setAttribute("fill", "none")
-        path.setAttribute("stroke", c)
+        path.setAttribute("stroke", `url(#${gradId})`)
         path.setAttribute("stroke-width", `${width}`)
-        path.setAttribute("stroke-opacity", "0.52")
+        path.setAttribute("stroke-opacity", "0.68")
         path.style.cursor = "pointer"
         path.dataset.origin = f.origin_region
         path.dataset.destination = f.destination_region
@@ -1413,7 +1688,7 @@ function renderSankey(flows, balances) {
     const tip = getSankeyTip()
     const resetEmphasis = () => {
         linkEls.forEach((el) => {
-            el.setAttribute("stroke-opacity", "0.52")
+            el.setAttribute("stroke-opacity", "0.68")
         })
         nodeTextEls.forEach((el) => {
             el.setAttribute("opacity", "1")
@@ -1450,7 +1725,7 @@ function renderSankey(flows, balances) {
 }
 
 async function runModel() {
-    state.apiBase = document.getElementById("api-base").value.trim()
+    state.apiBase = "local"
     const basePayload = buildBasePayload()
     setStatus("Computing tax model and loading charts...")
 

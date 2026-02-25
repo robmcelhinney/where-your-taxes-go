@@ -30,7 +30,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
             rel="stylesheet"
         />
         <link rel="stylesheet" href="./styles.css" />
@@ -89,7 +89,7 @@
                     </p>
                 </div>
                 <form id="tax-form" class="form-grid">
-                    <label>
+                    <label class="hero-income">
                         Annual income (GBP)
                         <input
                             type="number"
@@ -125,14 +125,6 @@
                             <option>2024-25</option>
                             <option>2023-24</option>
                         </select>
-                    </label>
-                    <label>
-                        API base URL (`local` or http URL)
-                        <input
-                            type="text"
-                            id="api-base"
-                            value="local"
-                        />
                     </label>
                     <details class="assumption-dropdown">
                         <summary>VAT Assumptions</summary>
@@ -414,9 +406,7 @@
                         UK band multipliers to the regional average. Deductions
                         are simplified and do not cover all HMRC edge cases.
                     </p>
-                    <button class="run" type="submit">
-                        Compute My Tax Footprint
-                    </button>
+                    <button class="run" type="submit">See My Footprint</button>
                 </form>
             </section>
 
@@ -453,11 +443,11 @@
                     <p class="muted">
                         Uses COFOG functional allocation for 2024-25. Some
                         categories used in full-budget/TME charts are outside
-                        this basis.
+                        this basis. Leader labels show larger slices; hover for
+                        full details.
                     </p>
                     <div id="pie-wrap" class="pie-wrap">
                         <div id="pie" class="pie"></div>
-                        <ul id="pie-legend" class="legend"></ul>
                     </div>
                 </article>
 
@@ -489,8 +479,8 @@
                     </div>
                 </div>
                 <p class="muted">
-                    Tile map by region: green = net contributor, red = net
-                    recipient.
+                    Hex cartogram by region: teal = net contributor, coral =
+                    net recipient.
                 </p>
                 <div id="uk-map" class="uk-map"></div>
             </section>
