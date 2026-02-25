@@ -21,11 +21,7 @@ python3 -m http.server 4173
 
 - http://127.0.0.1:4173
 
-By default the page runs in local mode (`API base URL = local`) and computes everything client-side from `web/data/frontend_bundle.json`.
-
-Optional backend mode:
-- Start API: `uv run uvicorn api.main:app --reload`
-- Set API base URL in the UI to `http://127.0.0.1:8000`
+By default the page computes everything client-side from `web/data/frontend_bundle.json` (static mode).
 
 UI includes:
 - methodology and data attribution sections

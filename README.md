@@ -36,9 +36,9 @@ Interactive project to estimate a UK taxpayer's contribution and map it to publi
 - Build precomputed regional balances and flows:
     - `uv run python data/scripts/build_regional_flows.py`
 - Fetch official ONS borrowing benchmark (PSNB ex):
-  - `uv run python data/scripts/fetch_official_borrowing.py`
+    - `uv run python data/scripts/fetch_official_borrowing.py`
 - Build pre-aggregated frontend bundle (for static mode):
-  - `python3 data/scripts/build_frontend_bundle.py`
+    - `python3 data/scripts/build_frontend_bundle.py`
 
 ## Run API
 
@@ -53,8 +53,7 @@ python3 -m http.server 4173
 
 Open: `http://127.0.0.1:4173`
 
-Default web mode is now static-first (`API base URL = local`) using `web/data/frontend_bundle.json`.
-You can still use backend mode by starting the API and setting `API base URL` to `http://127.0.0.1:8000`.
+Default web mode is static-first using `web/data/frontend_bundle.json` (no API required for normal usage).
 
 ## Main API Endpoints
 
